@@ -1,0 +1,9 @@
+services:
+  app:
+    container_name: product_microservice
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - PORT=5555
+    restart: always
