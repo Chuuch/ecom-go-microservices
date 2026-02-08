@@ -7,3 +7,10 @@ Logger:
   DisableStackTrace: false
   Encoding: json
   Level: info
+Jaeger:
+  Host: localhost:6831
+  ServiceName: products_microservice
+  LogSpans: false
+Metrics:
+  URL: 0.0.0.0:7071
+  ServiceName: products_microservice
