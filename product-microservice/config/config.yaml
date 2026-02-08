@@ -1,3 +1,9 @@
 AppVersion: 1.0.0
 Server:
   Port: :5555
+  Development: true
+Logger:
+  DisableCaller: false
+  DisableStackTrace: false
+  Encoding: json
+  Level: info
