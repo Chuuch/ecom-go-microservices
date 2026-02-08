@@ -10,11 +10,21 @@ import (
 type Config struct {
 	AppVersion string
 	Server     ServerConfig
+	Logger     LoggerConfig
 }
 
 // Server config
 type ServerConfig struct {
-	Port string
+	Port        string
+	Development bool
+}
+
+// Logger config
+type LoggerConfig struct {
+	DisableCaller     bool
+	DisableStackTrace bool
+	Encoding          string
+	Level             string
 }
 
 // Load config file from given path
