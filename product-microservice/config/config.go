@@ -11,6 +11,7 @@ type Config struct {
 	AppVersion string
 	Server     ServerConfig
 	Logger     LoggerConfig
+	Jaeger     JaegerConfig
 }
 
 // Server config
@@ -25,6 +26,19 @@ type LoggerConfig struct {
 	DisableStackTrace bool
 	Encoding          string
 	Level             string
+}
+
+// Jaeger config
+type JaegerConfig struct {
+	Host        string
+	ServiceName string
+	LogSpans    bool
+}
+
+// Metrics config
+type MetricsConfig struct {
+	URL         string
+	ServiceName string
 }
 
 // Load config file from given path
