@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package productService;
+option go_package = ".;productService";
+
+import "google/protobuf/timestamp.proto";
+
+message Product {
+    string product_id = 1;
+    string category_id = 2;
+    string name = 3;
+    string description = 4;
+    double price = 5;
+    string image_url = 6;
+    repeated string photos = 7;
+    int64 quantity = 8;
+    int64 rating = 9;
+    google.protobuf.Timestamp created_at = 10;
+    google.protobuf.Timestamp updated_at = 11;
+}
+
+message Empty {}
+
+
+// CreateRequest is the request for the Create method
+message CreateRequest {
+    string category_id = 1;
+    string name = 2;
+    string description = 3;
+    double price = 4;
+    string image_url = 5;
+    repeated string photos = 6;
+    int64 quantity = 7;
+    int64 rating = 8;
+}
+
+// CreateResponse is the response for the Create method
+message CreateResponse {
+    Product product = 1;
+}
+
+
+// UpdateRequest is the request for the Update method
+message UpdateRequest {
+    string product_id = 1;
+    string category_id = 2;
+    string name = 3;
+    string description = 4;
+    double price = 5;
+    string image_url = 6;
+    repeated string photos = 7;
+    int64 quantity = 8;
+    int64 rating = 9;
+}
+
+// UpdateResponse is the response for the Update method
+message UpdateResponse {
+    Product product = 1;
+}
+
+// FindByIDRequest is the request for the FindByID method
+message FindByIDRequest {
+    string product_id = 1;
+}
+// FindByIDResponse is the response for the FindByID method
+message FindByIDResponse {
+    Product product = 1;
+}
+
+
+// SearchRequest is the request for the Search method
+message SearchRequest {
+    string query = 1;
+    int64 page = 2;
+    int64 size = 3;
+}
+
+// SearchResponse is the response for the Search method
+message SearchResponse {
+    int64 total_count = 1;
+    int64 total_pages = 2;
+    int64 page = 3;
+    int64 size = 4;
+    bool has_more = 5;
+    repeated Product products = 6;
+}
+
+// ProductService is the service for the product microservice
+service ProductService {
+    // Create is the method to create a new product
+    rpc Create(CreateRequest) returns (CreateResponse);
+    // Update is the method to update a product
+    rpc Update(UpdateRequest) returns (UpdateResponse);
+    // FindByID is the method to find a product by id
+    rpc FindByID(FindByIDRequest) returns (FindByIDResponse);
+    // Search is the method to search for products
+    rpc Search(SearchRequest) returns (SearchResponse);
+}
