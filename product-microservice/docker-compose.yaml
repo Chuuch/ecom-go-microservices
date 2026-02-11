@@ -10,6 +10,12 @@ services:
     environment:
       - PORT=5555
     restart: always
+    depends_on:
+      - redis
+      - prometheus
+      - node-exporter
+      - grafana
+      - jaeger
   redis:
     image: redis:8.4.0-alpine
     container_name: product_microservice_redis
