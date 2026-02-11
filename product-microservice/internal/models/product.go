@@ -1,5 +1,6 @@
 package models
 
+// Product model
 type Product struct {
 	ProductID   string   `json:"product_id"`
 	CategoryID  string   `json:"category_id"`
