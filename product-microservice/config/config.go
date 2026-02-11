@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -16,8 +17,13 @@ type Config struct {
 
 // Server config
 type ServerConfig struct {
-	Port        string
-	Development bool
+	Port              string
+	Development       bool
+	Timeout           time.Duration
+	ReadTimeout       time.Duration
+	WriteTimeout      time.Duration
+	MaxConnectionIdle time.Duration
+	MaxConnectionAge  time.Duration
 }
 
 // Logger config
