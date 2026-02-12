@@ -13,9 +13,14 @@ Logger:
   Encoding: json
   Level: info
 Jaeger:
-  Host: localhost:6831
+  Host: jaeger:6831
   ServiceName: products_microservice
   LogSpans: false
 Metrics:
   URL: 0.0.0.0:7071
   ServiceName: products_microservice
+MongoDB:
+  URI: mongodb://mongodb:27017
+  User: "admin"
+  Password: "admin"
+  DB: "products"
