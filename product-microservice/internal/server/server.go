@@ -15,6 +15,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
@@ -30,16 +31,18 @@ import (
 
 // Server struct
 type Server struct {
-	logger logger.Logger
-	cfg    *config.Config
-	tracer opentracing.Tracer
+	logger  logger.Logger
+	cfg     *config.Config
+	tracer  opentracing.Tracer
+	mongoDB *mongo.Client
 }
 
-func NewServer(logger logger.Logger, cfg *config.Config, tracer opentracing.Tracer) *Server {
+func NewServer(logger logger.Logger, cfg *config.Config, tracer opentracing.Tracer, mongoDB *mongo.Client) *Server {
 	return &Server{
-		logger: logger,
-		cfg:    cfg,
-		tracer: tracer,
+		logger:  logger,
+		cfg:     cfg,
+		tracer:  tracer,
+		mongoDB: mongoDB,
 	}
 }
 
@@ -49,7 +52,7 @@ func (s *Server) Start() error {
 
 	validate := validator.New()
 
-	productMongoRepo := repository.NewProductMongoRepository()
+	productMongoRepo := repository.NewProductMongoRepository(s.mongoDB)
 	productUC := usecase.NewProductUC(productMongoRepo, s.logger)
 
 	l, err := net.Listen("tcp", s.cfg.Server.Port)
