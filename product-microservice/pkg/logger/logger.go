@@ -11,29 +11,29 @@ import (
 // Logger methods interface
 type Logger interface {
 	InitLogger()
-	Debug(args any)
+	Debug(args ...any)
 	Debugf(template string, args ...any)
-	Info(args any)
+	Info(args ...any)
 	Infof(template string, args ...any)
-	Warn(args any)
+	Warn(args ...any)
 	Warnf(template string, args ...any)
-	Error(args any)
+	Error(args ...any)
 	Errorf(template string, args ...any)
-	DPanic(args any)
+	DPanic(args ...any)
 	DPanicf(template string, args ...any)
-	Fatal(args any)
+	Fatal(args ...any)
 	Fatalf(template string, args ...any)
 }
 
 // Logger
 type apiLogger struct {
-	c           *config.Config
+	cfg         *config.Config
 	sugarLogger *zap.SugaredLogger
 }
 
 // App Logger constructor
-func NewApiLogger(c *config.Config) *apiLogger {
-	return &apiLogger{c: c}
+func NewApiLogger(cfg *config.Config) *apiLogger {
+	return &apiLogger{cfg: cfg}
 }
 
 // For mapping config logger to email_service logger levels
@@ -47,8 +47,8 @@ var loggerLevelMap = map[string]zapcore.Level{
 	"fatal":  zapcore.FatalLevel,
 }
 
-func (l *apiLogger) getLoggerLevel(c *config.Config) zapcore.Level {
-	level, exist := loggerLevelMap[c.Logger.Level]
+func (l *apiLogger) getLoggerLevel(cfg *config.Config) zapcore.Level {
+	level, exist := loggerLevelMap[cfg.Logger.Level]
 	if !exist {
 		return zapcore.DebugLevel
 	}
@@ -58,12 +58,12 @@ func (l *apiLogger) getLoggerLevel(c *config.Config) zapcore.Level {
 
 // InitLogger Init logger
 func (l *apiLogger) InitLogger() {
-	logLevel := l.getLoggerLevel(l.c)
+	logLevel := l.getLoggerLevel(l.cfg)
 
 	logWriter := zapcore.AddSync(os.Stderr)
 
 	var encoderc zapcore.EncoderConfig
-	if l.c.Server.Development {
+	if l.cfg.Server.Development {
 		encoderc = zap.NewDevelopmentEncoderConfig()
 	} else {
 		encoderc = zap.NewProductionEncoderConfig()
@@ -76,7 +76,7 @@ func (l *apiLogger) InitLogger() {
 	encoderc.NameKey = "NAME"
 	encoderc.MessageKey = "MESSAGE"
 
-	if l.c.Logger.Encoding == "console" {
+	if l.cfg.Logger.Encoding == "console" {
 		encoder = zapcore.NewConsoleEncoder(encoderc)
 	} else {
 		encoder = zapcore.NewJSONEncoder(encoderc)
