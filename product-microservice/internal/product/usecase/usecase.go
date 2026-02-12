@@ -6,6 +6,7 @@ import (
 	"github.com/chuuch/product-microservice/internal/models"
 	"github.com/chuuch/product-microservice/internal/product"
 	"github.com/chuuch/product-microservice/pkg/logger"
+	"github.com/opentracing/opentracing-go"
 )
 
 type productUC struct {
@@ -21,7 +22,10 @@ func NewProductUC(productRepo product.MongoRepository, log logger.Logger) *produ
 }
 
 func (u *productUC) CreateProduct(ctx context.Context, product *models.Product) (*models.Product, error) {
-	panic("not implemented")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.CreateProduct")
+	defer span.Finish()
+
+	return u.productRepo.CreateProduct(ctx, product)
 }
 
 func (u *productUC) UpdateProduct(ctx context.Context, product *models.Product) (*models.Product, error) {
