@@ -5,6 +5,7 @@ option go_package = ".;productService";
 
 import "google/protobuf/timestamp.proto";
 
+// Product is the message for the Product microservice
 message Product {
     string product_id = 1;
     string category_id = 2;
@@ -19,6 +20,7 @@ message Product {
     google.protobuf.Timestamp updated_at = 11;
 }
 
+// Empty is the message for the Empty microservice
 message Empty {}
 
 
