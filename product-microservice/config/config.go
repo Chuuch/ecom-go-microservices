@@ -13,6 +13,8 @@ type Config struct {
 	Server     ServerConfig
 	Logger     LoggerConfig
 	Jaeger     JaegerConfig
+	Metrics    MetricsConfig
+	MongoDB    MongoDBConfig
 }
 
 // Server config
@@ -45,6 +47,14 @@ type JaegerConfig struct {
 type MetricsConfig struct {
 	URL         string
 	ServiceName string
+}
+
+// MongoDB config
+type MongoDBConfig struct {
+	URI      string
+	User     string
+	Password string
+	DB       string
 }
 
 // Load config file from given path
