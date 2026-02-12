@@ -70,10 +70,10 @@ func (p *ProductGRPCService) UpdateProduct(ctx context.Context, req *productServ
 	panic("not implemented")
 }
 
-func (p *ProductGRPCService) GetProductByID(ctx context.Context, req *productService.FindByIDRequest) (*productService.FindByIDResponse, error) {
+func (p *ProductGRPCService) FindByID(ctx context.Context, req *productService.FindByIDRequest) (*productService.FindByIDResponse, error) {
 	panic("not implemented")
 }
 
-func (p *ProductGRPCService) SearchProducts(ctx context.Context, req *productService.SearchRequest) (*productService.SearchResponse, error) {
+func (p *ProductGRPCService) SearchProduct(ctx context.Context, req *productService.SearchRequest) (*productService.SearchResponse, error) {
 	panic("not implemented")
 }
