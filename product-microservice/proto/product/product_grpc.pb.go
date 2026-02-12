@@ -19,10 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ProductService_Create_FullMethodName   = "/productService.ProductService/Create"
-	ProductService_Update_FullMethodName   = "/productService.ProductService/Update"
-	ProductService_FindByID_FullMethodName = "/productService.ProductService/FindByID"
-	ProductService_Search_FullMethodName   = "/productService.ProductService/Search"
+	ProductService_CreateProduct_FullMethodName = "/productService.ProductService/CreateProduct"
+	ProductService_UpdateProduct_FullMethodName = "/productService.ProductService/UpdateProduct"
+	ProductService_FindByID_FullMethodName      = "/productService.ProductService/FindByID"
+	ProductService_SearchProduct_FullMethodName = "/productService.ProductService/SearchProduct"
 )
 
 // ProductServiceClient is the client API for ProductService service.
@@ -32,13 +32,13 @@ const (
 // ProductService is the service for the product microservice
 type ProductServiceClient interface {
 	// Create is the method to create a new product
-	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
+	CreateProduct(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 	// Update is the method to update a product
-	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error)
+	UpdateProduct(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error)
 	// FindByID is the method to find a product by id
 	FindByID(ctx context.Context, in *FindByIDRequest, opts ...grpc.CallOption) (*FindByIDResponse, error)
 	// Search is the method to search for products
-	Search(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*SearchResponse, error)
+	SearchProduct(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*SearchResponse, error)
 }
 
 type productServiceClient struct {
@@ -49,20 +49,20 @@ func NewProductServiceClient(cc grpc.ClientConnInterface) ProductServiceClient {
 	return &productServiceClient{cc}
 }
 
-func (c *productServiceClient) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
+func (c *productServiceClient) CreateProduct(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateResponse)
-	err := c.cc.Invoke(ctx, ProductService_Create_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ProductService_CreateProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *productServiceClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error) {
+func (c *productServiceClient) UpdateProduct(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateResponse)
-	err := c.cc.Invoke(ctx, ProductService_Update_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ProductService_UpdateProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -79,10 +79,10 @@ func (c *productServiceClient) FindByID(ctx context.Context, in *FindByIDRequest
 	return out, nil
 }
 
-func (c *productServiceClient) Search(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*SearchResponse, error) {
+func (c *productServiceClient) SearchProduct(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*SearchResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SearchResponse)
-	err := c.cc.Invoke(ctx, ProductService_Search_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ProductService_SearchProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,13 +96,13 @@ func (c *productServiceClient) Search(ctx context.Context, in *SearchRequest, op
 // ProductService is the service for the product microservice
 type ProductServiceServer interface {
 	// Create is the method to create a new product
-	Create(context.Context, *CreateRequest) (*CreateResponse, error)
+	CreateProduct(context.Context, *CreateRequest) (*CreateResponse, error)
 	// Update is the method to update a product
-	Update(context.Context, *UpdateRequest) (*UpdateResponse, error)
+	UpdateProduct(context.Context, *UpdateRequest) (*UpdateResponse, error)
 	// FindByID is the method to find a product by id
 	FindByID(context.Context, *FindByIDRequest) (*FindByIDResponse, error)
 	// Search is the method to search for products
-	Search(context.Context, *SearchRequest) (*SearchResponse, error)
+	SearchProduct(context.Context, *SearchRequest) (*SearchResponse, error)
 	mustEmbedUnimplementedProductServiceServer()
 }
 
@@ -113,17 +113,17 @@ type ProductServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedProductServiceServer struct{}
 
-func (UnimplementedProductServiceServer) Create(context.Context, *CreateRequest) (*CreateResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Create not implemented")
+func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateRequest) (*CreateResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateProduct not implemented")
 }
-func (UnimplementedProductServiceServer) Update(context.Context, *UpdateRequest) (*UpdateResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Update not implemented")
+func (UnimplementedProductServiceServer) UpdateProduct(context.Context, *UpdateRequest) (*UpdateResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateProduct not implemented")
 }
 func (UnimplementedProductServiceServer) FindByID(context.Context, *FindByIDRequest) (*FindByIDResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method FindByID not implemented")
 }
-func (UnimplementedProductServiceServer) Search(context.Context, *SearchRequest) (*SearchResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Search not implemented")
+func (UnimplementedProductServiceServer) SearchProduct(context.Context, *SearchRequest) (*SearchResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SearchProduct not implemented")
 }
 func (UnimplementedProductServiceServer) mustEmbedUnimplementedProductServiceServer() {}
 func (UnimplementedProductServiceServer) testEmbeddedByValue()                        {}
@@ -146,38 +146,38 @@ func RegisterProductServiceServer(s grpc.ServiceRegistrar, srv ProductServiceSer
 	s.RegisterService(&ProductService_ServiceDesc, srv)
 }
 
-func _ProductService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ProductService_CreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductServiceServer).Create(ctx, in)
+		return srv.(ProductServiceServer).CreateProduct(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ProductService_Create_FullMethodName,
+		FullMethod: ProductService_CreateProduct_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).Create(ctx, req.(*CreateRequest))
+		return srv.(ProductServiceServer).CreateProduct(ctx, req.(*CreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ProductService_UpdateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductServiceServer).Update(ctx, in)
+		return srv.(ProductServiceServer).UpdateProduct(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ProductService_Update_FullMethodName,
+		FullMethod: ProductService_UpdateProduct_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).Update(ctx, req.(*UpdateRequest))
+		return srv.(ProductServiceServer).UpdateProduct(ctx, req.(*UpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -200,20 +200,20 @@ func _ProductService_FindByID_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductService_Search_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ProductService_SearchProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SearchRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductServiceServer).Search(ctx, in)
+		return srv.(ProductServiceServer).SearchProduct(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ProductService_Search_FullMethodName,
+		FullMethod: ProductService_SearchProduct_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).Search(ctx, req.(*SearchRequest))
+		return srv.(ProductServiceServer).SearchProduct(ctx, req.(*SearchRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -226,20 +226,20 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ProductServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Create",
-			Handler:    _ProductService_Create_Handler,
+			MethodName: "CreateProduct",
+			Handler:    _ProductService_CreateProduct_Handler,
 		},
 		{
-			MethodName: "Update",
-			Handler:    _ProductService_Update_Handler,
+			MethodName: "UpdateProduct",
+			Handler:    _ProductService_UpdateProduct_Handler,
 		},
 		{
 			MethodName: "FindByID",
 			Handler:    _ProductService_FindByID_Handler,
 		},
 		{
-			MethodName: "Search",
-			Handler:    _ProductService_Search_Handler,
+			MethodName: "SearchProduct",
+			Handler:    _ProductService_SearchProduct_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -90,11 +90,11 @@ message SearchResponse {
 // ProductService is the service for the product microservice
 service ProductService {
     // Create is the method to create a new product
-    rpc Create(CreateRequest) returns (CreateResponse);
+    rpc CreateProduct(CreateRequest) returns (CreateResponse);
     // Update is the method to update a product
-    rpc Update(UpdateRequest) returns (UpdateResponse);
+    rpc UpdateProduct(UpdateRequest) returns (UpdateResponse);
     // FindByID is the method to find a product by id
     rpc FindByID(FindByIDRequest) returns (FindByIDResponse);
     // Search is the method to search for products
-    rpc Search(SearchRequest) returns (SearchResponse);
+    rpc SearchProduct(SearchRequest) returns (SearchResponse);
 }

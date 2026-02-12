@@ -22,6 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Product is the message for the Product microservice
 type Product struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProductId     string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
@@ -146,6 +147,7 @@ func (x *Product) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+// Empty is the message for the Empty microservice
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -784,12 +786,12 @@ const file_product_product_proto_rawDesc = "" +
 	"\x04page\x18\x03 \x01(\x03R\x04page\x12\x12\n" +
 	"\x04size\x18\x04 \x01(\x03R\x04size\x12\x19\n" +
 	"\bhas_more\x18\x05 \x01(\bR\ahasMore\x123\n" +
-	"\bproducts\x18\x06 \x03(\v2\x17.productService.ProductR\bproducts2\xba\x02\n" +
-	"\x0eProductService\x12G\n" +
-	"\x06Create\x12\x1d.productService.CreateRequest\x1a\x1e.productService.CreateResponse\x12G\n" +
-	"\x06Update\x12\x1d.productService.UpdateRequest\x1a\x1e.productService.UpdateResponse\x12M\n" +
-	"\bFindByID\x12\x1f.productService.FindByIDRequest\x1a .productService.FindByIDResponse\x12G\n" +
-	"\x06Search\x12\x1d.productService.SearchRequest\x1a\x1e.productService.SearchResponseB\x12Z\x10.;productServiceb\x06proto3"
+	"\bproducts\x18\x06 \x03(\v2\x17.productService.ProductR\bproducts2\xcf\x02\n" +
+	"\x0eProductService\x12N\n" +
+	"\rCreateProduct\x12\x1d.productService.CreateRequest\x1a\x1e.productService.CreateResponse\x12N\n" +
+	"\rUpdateProduct\x12\x1d.productService.UpdateRequest\x1a\x1e.productService.UpdateResponse\x12M\n" +
+	"\bFindByID\x12\x1f.productService.FindByIDRequest\x1a .productService.FindByIDResponse\x12N\n" +
+	"\rSearchProduct\x12\x1d.productService.SearchRequest\x1a\x1e.productService.SearchResponseB\x12Z\x10.;productServiceb\x06proto3"
 
 var (
 	file_product_product_proto_rawDescOnce sync.Once
@@ -824,14 +826,14 @@ var file_product_product_proto_depIdxs = []int32{
 	0,  // 3: productService.UpdateResponse.product:type_name -> productService.Product
 	0,  // 4: productService.FindByIDResponse.product:type_name -> productService.Product
 	0,  // 5: productService.SearchResponse.products:type_name -> productService.Product
-	2,  // 6: productService.ProductService.Create:input_type -> productService.CreateRequest
-	4,  // 7: productService.ProductService.Update:input_type -> productService.UpdateRequest
+	2,  // 6: productService.ProductService.CreateProduct:input_type -> productService.CreateRequest
+	4,  // 7: productService.ProductService.UpdateProduct:input_type -> productService.UpdateRequest
 	6,  // 8: productService.ProductService.FindByID:input_type -> productService.FindByIDRequest
-	8,  // 9: productService.ProductService.Search:input_type -> productService.SearchRequest
-	3,  // 10: productService.ProductService.Create:output_type -> productService.CreateResponse
-	5,  // 11: productService.ProductService.Update:output_type -> productService.UpdateResponse
+	8,  // 9: productService.ProductService.SearchProduct:input_type -> productService.SearchRequest
+	3,  // 10: productService.ProductService.CreateProduct:output_type -> productService.CreateResponse
+	5,  // 11: productService.ProductService.UpdateProduct:output_type -> productService.UpdateResponse
 	7,  // 12: productService.ProductService.FindByID:output_type -> productService.FindByIDResponse
-	9,  // 13: productService.ProductService.Search:output_type -> productService.SearchResponse
+	9,  // 13: productService.ProductService.SearchProduct:output_type -> productService.SearchResponse
 	10, // [10:14] is the sub-list for method output_type
 	6,  // [6:10] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
