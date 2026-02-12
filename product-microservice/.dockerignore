@@ -1,0 +1,30 @@
+# MongoDB data directory
+mongo_data_container/
+
+# Git files
+.git/
+.gitignore
+
+# Documentation
+*.md
+README*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts (if any)
+*.exe
+*.test
+*.out
+
+# Temporary files
+*.tmp
+*.log
