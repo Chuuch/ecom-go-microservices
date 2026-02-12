@@ -12,6 +12,7 @@ services:
     restart: always
     depends_on:
       - redis
+      - mongodb
       - prometheus
       - node-exporter
       - grafana
@@ -71,3 +72,22 @@ services:
       - "9411:9411"
     environment:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: products
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo_data_container:/data/db
+    networks:
+      - default
+
+networks:
+  default:
+    name: ecom_network
