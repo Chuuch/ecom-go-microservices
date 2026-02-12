@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
-	"net/http"
 
 	"github.com/chuuch/product-microservice/config"
+	"github.com/chuuch/product-microservice/internal/server"
 	"github.com/chuuch/product-microservice/pkg/jaeger"
 	"github.com/chuuch/product-microservice/pkg/logger"
 	"github.com/chuuch/product-microservice/pkg/mongodb"
@@ -60,19 +59,8 @@ func main() {
 			appLogger.Fatal("cannot disconnect from MongoDB", err)
 		}
 	}()
-	appLogger.Info("MongoDB connected: %v", mongoDBConn.NumberSessionsInProgress())
+	appLogger.Infof("MongoDB connected: %v", mongoDBConn.NumberSessionsInProgress())
 
-	// Init HTTP server
-	http.HandleFunc("/api/v1", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("REQUEST: %v", r.RemoteAddr)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(map[string]string{"message": "Hello world!"}); err != nil {
-			log.Printf("ERROR: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	})
-	log.Printf("Server is listening on port: %v", cfg.Server.Port)
-	log.Fatal(http.ListenAndServe(cfg.Server.Port, nil))
+	s := server.NewServer(appLogger, cfg, tracer, mongoDBConn)
+	appLogger.Fatal(s.Start())
 }
