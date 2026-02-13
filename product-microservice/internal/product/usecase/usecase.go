@@ -30,13 +30,22 @@ func (u *productUC) CreateProduct(ctx context.Context, product *models.Product) 
 }
 
 func (u *productUC) UpdateProduct(ctx context.Context, product *models.Product) (*models.Product, error) {
-	panic("not implemented")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.UpdateProduct")
+	defer span.Finish()
+
+	return u.productRepo.UpdateProduct(ctx, product)
 }
 
 func (u *productUC) GetProductByID(ctx context.Context, productID primitive.ObjectID) (*models.Product, error) {
-	panic("not implemented")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.GetProductByID")
+	defer span.Finish()
+
+	return u.productRepo.GetProductByID(ctx, productID)
 }
 
 func (u *productUC) SearchProducts(ctx context.Context, query string, page, size int64) ([]*models.Product, error) {
-	panic("not implemented")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.SearchProducts")
+	defer span.Finish()
+
+	return u.productRepo.SearchProducts(ctx, query, page, size)
 }
