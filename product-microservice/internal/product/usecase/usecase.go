@@ -6,6 +6,7 @@ import (
 	"github.com/chuuch/product-microservice/internal/models"
 	"github.com/chuuch/product-microservice/internal/product"
 	"github.com/chuuch/product-microservice/pkg/logger"
+	"github.com/chuuch/product-microservice/pkg/utils"
 	"github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -43,9 +44,9 @@ func (u *productUC) GetProductByID(ctx context.Context, productID primitive.Obje
 	return u.productRepo.GetProductByID(ctx, productID)
 }
 
-func (u *productUC) SearchProducts(ctx context.Context, query string, page, size int64) ([]*models.Product, error) {
+func (u *productUC) SearchProducts(ctx context.Context, query string, pagination *utils.Pagination) (*models.ProductsList, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.SearchProducts")
 	defer span.Finish()
 
-	return u.productRepo.SearchProducts(ctx, query, page, size)
+	return u.productRepo.SearchProducts(ctx, query, pagination)
 }
