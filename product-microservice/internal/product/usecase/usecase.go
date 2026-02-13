@@ -7,6 +7,7 @@ import (
 	"github.com/chuuch/product-microservice/internal/product"
 	"github.com/chuuch/product-microservice/pkg/logger"
 	"github.com/opentracing/opentracing-go"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type productUC struct {
@@ -32,7 +33,7 @@ func (u *productUC) UpdateProduct(ctx context.Context, product *models.Product) 
 	panic("not implemented")
 }
 
-func (u *productUC) GetProductByID(ctx context.Context, productID string) (*models.Product, error) {
+func (u *productUC) GetProductByID(ctx context.Context, productID primitive.ObjectID) (*models.Product, error) {
 	panic("not implemented")
 }
 
