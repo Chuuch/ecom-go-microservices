@@ -7,6 +7,7 @@ import (
 	"github.com/chuuch/product-microservice/internal/product"
 	grpcerrors "github.com/chuuch/product-microservice/pkg/grpc_errors"
 	"github.com/chuuch/product-microservice/pkg/logger"
+	"github.com/chuuch/product-microservice/pkg/utils"
 	productService "github.com/chuuch/product-microservice/proto/product"
 	"github.com/go-playground/validator/v10"
 	"github.com/opentracing/opentracing-go"
@@ -128,12 +129,18 @@ func (p *ProductGRPCService) SearchProduct(ctx context.Context, req *productServ
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ProductGRPCService.SearchProduct")
 	defer span.Finish()
 
-	products, err := p.productUC.SearchProducts(ctx, req.GetQuery(), req.GetPage(), req.GetPage())
+	products, err := p.productUC.SearchProducts(ctx, req.GetQuery(), utils.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
 	if err != nil {
 		p.log.Errorf("productUC.SearchProducts: %v", err)
 		return nil, grpcerrors.ErrorResponse(err, err.Error())
 	}
 
-	p.log.Info("productUC.SearchProducts: %v", products)
-	return nil, nil
+	return &productService.SearchResponse{
+		TotalCount: products.TotalCount,
+		TotalPages: products.TotalPages,
+		Page:       products.Page,
+		Size:       products.Size,
+		HasMore:    products.HasMore,
+		Products:   products.ToProtoList(),
+	}, nil
 }
