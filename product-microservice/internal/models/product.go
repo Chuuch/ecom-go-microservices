@@ -76,3 +76,23 @@ func ProductFromProto(product *productService.Product) (*Product, error) {
 		UpdatedAt:   product.GetUpdatedAt().AsTime(),
 	}, nil
 }
+
+// ProductsList All products response with pagination
+type ProductsList struct {
+	TotalCount int64      `json:"total_count"`
+	TotalPages int64      `json:"total_pages"`
+	Page       int64      `json:"page"`
+	Size       int64      `json:"size"`
+	HasMore    bool       `json:"has_more"`
+	Products   []*Product `json:"products"`
+}
+
+// ToProtoList convert products list to proto
+func (p *ProductsList) ToProtoList() []*productService.Product {
+	// Pre-allocate memory for efficiency of length 0 with capacity for all items.
+	productList := make([]*productService.Product, 0, len(p.Products))
+	for _, product := range p.Products {
+		productList = append(productList, product.ToProto())
+	}
+	return productList
+}
