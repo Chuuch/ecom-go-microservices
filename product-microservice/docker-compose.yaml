@@ -9,6 +9,7 @@ services:
       - 5007:5007
     environment:
       - PORT=5555
+      - KAFKA_BROKERS=kafka1:19091,kafka2:19092,kafka3:19093
     restart: always
     depends_on:
       - redis
