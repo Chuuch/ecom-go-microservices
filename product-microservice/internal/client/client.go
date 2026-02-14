@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/chuuch/product-microservice/internal/models"
 	"github.com/segmentio/kafka-go"
@@ -29,7 +30,17 @@ func main() {
 	defer w.Close()
 
 	product := &models.Product{
-		ProductID: primitive.NewObjectID(),
+		ProductID:   primitive.NewObjectID(),
+		CategoryID:  primitive.NewObjectID(),
+		Name:        "Test Product",
+		Description: "Test Description",
+		Price:       100.00,
+		Quantity:    100,
+		Rating:      5,
+		Photos:      []string{"https://example.com/photo1.jpg", "https://example.com/photo2.jpg"},
+		ImageURL:    nil,
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
 	}
 
 	productBytes, err := json.Marshal(&product)
