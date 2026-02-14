@@ -44,24 +44,8 @@ func (c *ProductsConsumerGroup) createProductWorker(ctx context.Context, cancel 
 
 		created, err := c.productsUC.CreateProduct(ctx, &prod)
 		if err != nil {
-			errMsg := models.ErrorMessage{
-				Offset:    m.Offset,
-				Topic:     m.Topic,
-				Partition: m.Partition,
-				Error:     err.Error(),
-				Time:      m.Time.UTC(),
-			}
-
-			errMsgBytes, err := json.Marshal(errMsg)
-			if err != nil {
-				c.log.Errorf("productsConsumerGroup.createProductWorker.json.Marshal: %v", err)
-				continue
-			}
-
-			if err := w.WriteMessages(ctx, kafka.Message{
-				Value: errMsgBytes,
-			}); err != nil {
-				c.log.Errorf("productsConsumerGroup.createProductWorker.w.WriteMessages: %v", err)
+			if err := c.publishErrorMessage(ctx, w, m, err); err != nil {
+				c.log.Errorf("productsConsumerGroup.createProductWorker.publishErrorMessage: %v", err)
 				continue
 			}
 		}
@@ -108,23 +92,8 @@ func (c *ProductsConsumerGroup) updateProductWorker(ctx context.Context, cancel 
 
 		updated, err := c.productsUC.UpdateProduct(ctx, &prod)
 		if err != nil {
-			errMsg := models.ErrorMessage{
-				Offset:    m.Offset,
-				Topic:     m.Topic,
-				Partition: m.Partition,
-				Error:     err.Error(),
-				Time:      m.Time.UTC(),
-			}
-
-			errMsgBytes, err := json.Marshal(errMsg)
-			if err != nil {
-				c.log.Errorf("productsConsumerGroup.updateProductWorker.json.Marshal: %v", err)
-				continue
-			}
-
-			if err := w.WriteMessages(ctx, kafka.Message{
-				Value: errMsgBytes,
-			}); err != nil {
+			if err := c.publishErrorMessage(ctx, w, m, err); err != nil {
+				c.log.Errorf("productsConsumerGroup.updateProductWorker.publishErrorMessage: %v", err)
 				continue
 			}
 		}
