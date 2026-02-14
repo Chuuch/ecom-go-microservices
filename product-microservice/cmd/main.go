@@ -7,6 +7,7 @@ import (
 	"github.com/chuuch/product-microservice/config"
 	"github.com/chuuch/product-microservice/internal/server"
 	"github.com/chuuch/product-microservice/pkg/jaeger"
+	"github.com/chuuch/product-microservice/pkg/kafka"
 	"github.com/chuuch/product-microservice/pkg/logger"
 	"github.com/chuuch/product-microservice/pkg/mongodb"
 	"github.com/opentracing/opentracing-go"
@@ -61,6 +62,21 @@ func main() {
 	}()
 	appLogger.Infof("MongoDB connected: %v", mongoDBConn.NumberSessionsInProgress())
 
+	// Init Kafka
+	conn, err := kafka.NewKafkaConnection(cfg)
+	if err != nil {
+		appLogger.Fatal("cannot create Kafka connection", err)
+	}
+	defer conn.Close()
+
+	// Get brokers
+	brokers, err := conn.Brokers()
+	if err != nil {
+		appLogger.Fatal("cannot get brokers", err)
+	}
+	appLogger.Infof("Kafka connected: %v", brokers)
+
+	// Init Server
 	s := server.NewServer(appLogger, cfg, tracer, mongoDBConn)
 	appLogger.Fatal(s.Start())
 }
