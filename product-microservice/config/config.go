@@ -45,6 +45,7 @@ type JaegerConfig struct {
 
 // Metrics config
 type MetricsConfig struct {
+	Port        string
 	URL         string
 	ServiceName string
 }
