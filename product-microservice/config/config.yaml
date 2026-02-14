@@ -17,6 +17,7 @@ Jaeger:
   ServiceName: products_microservice
   LogSpans: false
 Metrics:
+  Port: :7070
   URL: 0.0.0.0:7071
   ServiceName: products_microservice
 MongoDB:
