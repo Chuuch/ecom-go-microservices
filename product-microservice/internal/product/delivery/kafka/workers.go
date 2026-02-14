@@ -35,26 +35,31 @@ func (c *ProductsConsumerGroup) createProductWorker(ctx context.Context, cancel 
 			string(m.Key),
 			string(m.Value),
 		)
+		incomingMessages.Inc()
 
 		var prod models.Product
 		if err := json.Unmarshal(m.Value, &prod); err != nil {
 			c.log.Errorf("json.Unmarshal: %v", err)
+			errorMessages.Inc()
 			continue
 		}
 
 		created, err := c.productsUC.CreateProduct(ctx, &prod)
 		if err != nil {
 			if err := c.publishErrorMessage(ctx, w, m, err); err != nil {
+				errorMessages.Inc()
 				c.log.Errorf("productsConsumerGroup.createProductWorker.publishErrorMessage: %v", err)
 				continue
 			}
 		}
 
 		if err := r.CommitMessages(ctx, m); err != nil {
+			errorMessages.Inc()
 			c.log.Errorf("r.CommitMessages: %v", err)
 			continue
 		}
 
+		successMessages.Inc()
 		c.log.Infof("WORKER: %v, created product: %v", workerID, created.ProductID)
 	}
 }
@@ -83,26 +88,31 @@ func (c *ProductsConsumerGroup) updateProductWorker(ctx context.Context, cancel 
 			string(m.Key),
 			string(m.Value),
 		)
+		incomingMessages.Inc()
 
 		var prod models.Product
 		if err := json.Unmarshal(m.Value, &prod); err != nil {
 			c.log.Errorf("json.Unmarshal: %v", err)
+			errorMessages.Inc()
 			continue
 		}
 
 		updated, err := c.productsUC.UpdateProduct(ctx, &prod)
 		if err != nil {
 			if err := c.publishErrorMessage(ctx, w, m, err); err != nil {
+				errorMessages.Inc()
 				c.log.Errorf("productsConsumerGroup.updateProductWorker.publishErrorMessage: %v", err)
 				continue
 			}
 		}
 
 		if err := r.CommitMessages(ctx, m); err != nil {
+			errorMessages.Inc()
 			c.log.Errorf("r.CommitMessages: %v", err)
 			continue
 		}
 
+		successMessages.Inc()
 		c.log.Infof("WORKER: %v, updated product: %v", workerID, updated.ProductID)
 	}
 }
