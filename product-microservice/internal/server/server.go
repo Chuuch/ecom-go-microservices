@@ -29,6 +29,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	productService "github.com/chuuch/product-microservice/internal/product/delivery/gRPC"
+	"github.com/chuuch/product-microservice/internal/product/delivery/kafka"
 	productsService "github.com/chuuch/product-microservice/proto/product"
 )
 
@@ -85,6 +86,9 @@ func (s *Server) Start() error {
 	productService := productService.NewProductGRPCService(productUC, s.logger, validate)
 	productsService.RegisterProductServiceServer(grpcServer, productService)
 	grpc_prometheus.Register(grpcServer)
+
+	productsConsumerGroup := kafka.NewProductsConsumerGroup(s.cfg.Kafka.Brokers, "products_group", s.cfg, productUC, s.logger)
+	productsConsumerGroup.RunConsumers(ctx, cancel)
 
 	go func() {
 		s.logger.Infof("GRPC Server is running on port: %s", s.cfg.Server.Port)
