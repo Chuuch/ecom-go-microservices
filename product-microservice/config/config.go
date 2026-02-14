@@ -15,6 +15,7 @@ type Config struct {
 	Jaeger     JaegerConfig
 	Metrics    MetricsConfig
 	MongoDB    MongoDBConfig
+	Kafka      KafkaConfig
 }
 
 // Server config
@@ -56,6 +57,13 @@ type MongoDBConfig struct {
 	User     string
 	Password string
 	DB       string
+}
+
+// Kafka config
+type KafkaConfig struct {
+	Broker1 string
+	Broker2 string
+	Broker3 string
 }
 
 // Load config file from given path
