@@ -61,9 +61,7 @@ type MongoDBConfig struct {
 
 // Kafka config
 type KafkaConfig struct {
-	Broker1 string
-	Broker2 string
-	Broker3 string
+	Brokers []string
 }
 
 // Load config file from given path
