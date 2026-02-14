@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"sync"
-	"time"
 
 	"github.com/chuuch/product-microservice/config"
 	"github.com/chuuch/product-microservice/internal/models"
@@ -13,28 +12,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/compress"
-)
-
-const (
-	minBytes               = 10e3            // fetch at least 10KB of messages
-	maxBytes               = 10e6            // fetch at most 10MB of messages
-	queueCapacity          = 100             // internal message buffer size in kafka.Reader
-	heartbeatInterval      = 3 * time.Second // hearbeat interval to the group coordinator
-	commitInterval         = 0               // commit offsets synchronously on every message
-	partitionWatchInterval = 5 * time.Second // how often to watch fo partition changes
-	maxAttempts            = 5               // maximum number of attempts for transient errors
-	dialTimeout            = 3 * time.Minute // timeout for connecting to the broker
-
-	createProductTopic   = "create_product"
-	createProductWorkers = 16
-	updateProductTopic   = "update_product"
-	updateProductWorkers = 16
-
-	productsGropupID     = "products_group"
-	deadLetterQueueTopic = "dead_letter_queue"
-
-	writerReadTimeout  = 10 * time.Second
-	writerWriteTimeout = 10 * time.Second
 )
 
 // ProductsConsumerGroup
