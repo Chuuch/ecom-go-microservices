@@ -87,7 +87,8 @@ func (l *apiLogger) InitLogger() {
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
 	l.sugarLogger = logger.Sugar()
-	if err := l.sugarLogger.Sync(); err != nil {
+	// Sync can fail when stderr is not a regular file (e.g. IDE terminal: "sync /dev/stderr: invalid argument")
+	if err := l.sugarLogger.Sync(); err != nil && err.Error() != "sync /dev/stderr: invalid argument" {
 		l.sugarLogger.Error(err)
 	}
 }
