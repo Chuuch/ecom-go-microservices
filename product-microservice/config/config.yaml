@@ -25,3 +25,7 @@ MongoDB:
   User: "admin"
   Password: "admin"
   DB: "products"
+Kafka:
+  Broker1: kafka1:19091
+  Broker2: kafka2:19092
+  Broker3: kafka3:19093
