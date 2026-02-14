@@ -12,3 +12,6 @@ down-local:
 
 proto:
 	protoc --go_out=./proto/product --go-grpc_out=./proto/product --proto_path=./proto proto/product/product.proto
+
+create_topic:
+	docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:19091 --create --topic products --partitions 3 --replication-factor 2
