@@ -16,8 +16,9 @@ proto:
 	protoc --go_out=./proto/product --go-grpc_out=./proto/product --proto_path=./proto proto/product/product.proto
 
 create_topic:
-	docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:19091 --create --topic create_product --partitions 3 --replication-factor 2
-	docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:19091 --create --topic update_product --partitions 3 --replication-factor 2
+#	docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:19091 --create --topic create_product --partitions 3 --replication-factor 2
+#	docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:19091 --create --topic update_product --partitions 3 --replication-factor 2
+	docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:19091 --create --topic dead_letter_queue --partitions 3 --replication-factor 2
 
 down:
 	rm -rf data/kafka1/data data/kafka2/data data/kafka3/data
