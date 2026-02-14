@@ -9,12 +9,15 @@ import (
 	"time"
 
 	"github.com/chuuch/product-microservice/config"
+	"github.com/chuuch/product-microservice/internal/interceptors"
 	"github.com/chuuch/product-microservice/internal/product/repository"
 	"github.com/chuuch/product-microservice/internal/product/usecase"
 	"github.com/chuuch/product-microservice/pkg/logger"
 	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo/v4"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -55,6 +58,8 @@ func (s *Server) Start() error {
 	productMongoRepo := repository.NewProductMongoRepository(s.mongoDB)
 	productUC := usecase.NewProductUC(productMongoRepo, s.logger)
 
+	im := interceptors.NewInterceptorManager(s.logger, s.cfg)
+
 	l, err := net.Listen("tcp", s.cfg.Server.Port)
 	if err != nil {
 		return errors.Wrap(err, "net.Listen")
@@ -74,6 +79,7 @@ func (s *Server) Start() error {
 			grpc_opentracing.UnaryServerInterceptor(),
 			grpc_prometheus.UnaryServerInterceptor,
 			grpcrecovery.UnaryServerInterceptor(),
+			im.Logger,
 		))
 
 	productService := productService.NewProductGRPCService(productUC, s.logger, validate)
@@ -89,6 +95,17 @@ func (s *Server) Start() error {
 		reflection.Register(grpcServer)
 	}
 
+	metricsServer := echo.New()
+
+	go func() {
+		metricsServer.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+		s.logger.Infof("Metrics server is running on port %s", s.cfg.Metrics.Port)
+		if err := metricsServer.Start(s.cfg.Metrics.Port); err != nil {
+			s.logger.Fatal(err)
+			cancel()
+		}
+	}()
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
@@ -97,6 +114,10 @@ func (s *Server) Start() error {
 		s.logger.Errorf("signal.Notify: %v", v)
 	case done := <-ctx.Done():
 		s.logger.Errorf("ctx.Done: %v", done)
+	}
+
+	if err := metricsServer.Shutdown(ctx); err != nil {
+		s.logger.Errorf("metricsServer.Shutdown: %v", err)
 	}
 
 	grpcServer.GracefulStop()
