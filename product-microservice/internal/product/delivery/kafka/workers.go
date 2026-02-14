@@ -11,7 +11,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func (c *ProductsConsumerGroup) createProductWorker(ctx context.Context, cancel context.CancelFunc, r *kafka.Reader, wg *sync.WaitGroup, workerID int) {
+func (c *ProductsConsumerGroup) createProductWorker(ctx context.Context, cancel context.CancelFunc, r *kafka.Reader, w *kafka.Writer, wg *sync.WaitGroup, workerID int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ProductsConsumerGroup.createProductWorker")
 	defer span.Finish()
 
@@ -44,8 +44,26 @@ func (c *ProductsConsumerGroup) createProductWorker(ctx context.Context, cancel 
 
 		created, err := c.productsUC.CreateProduct(ctx, &prod)
 		if err != nil {
-			c.log.Errorf("productsUC.CreateProduct: %v", err)
-			continue
+			errMsg := models.ErrorMessage{
+				Offset:    m.Offset,
+				Topic:     m.Topic,
+				Partition: m.Partition,
+				Error:     err.Error(),
+				Time:      m.Time.UTC(),
+			}
+
+			errMsgBytes, err := json.Marshal(errMsg)
+			if err != nil {
+				c.log.Errorf("productsConsumerGroup.createProductWorker.json.Marshal: %v", err)
+				continue
+			}
+
+			if err := w.WriteMessages(ctx, kafka.Message{
+				Value: errMsgBytes,
+			}); err != nil {
+				c.log.Errorf("productsConsumerGroup.createProductWorker.w.WriteMessages: %v", err)
+				continue
+			}
 		}
 
 		if err := r.CommitMessages(ctx, m); err != nil {
@@ -57,7 +75,7 @@ func (c *ProductsConsumerGroup) createProductWorker(ctx context.Context, cancel 
 	}
 }
 
-func (c *ProductsConsumerGroup) updateProductWorker(ctx context.Context, cancel context.CancelFunc, r *kafka.Reader, wg *sync.WaitGroup, workerID int) {
+func (c *ProductsConsumerGroup) updateProductWorker(ctx context.Context, cancel context.CancelFunc, r *kafka.Reader, w *kafka.Writer, wg *sync.WaitGroup, workerID int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ProductsConsumerGroup.updateProductWorker")
 	defer span.Finish()
 
@@ -90,8 +108,25 @@ func (c *ProductsConsumerGroup) updateProductWorker(ctx context.Context, cancel 
 
 		updated, err := c.productsUC.UpdateProduct(ctx, &prod)
 		if err != nil {
-			c.log.Errorf("productsUC.UpdateProduct: %v", err)
-			continue
+			errMsg := models.ErrorMessage{
+				Offset:    m.Offset,
+				Topic:     m.Topic,
+				Partition: m.Partition,
+				Error:     err.Error(),
+				Time:      m.Time.UTC(),
+			}
+
+			errMsgBytes, err := json.Marshal(errMsg)
+			if err != nil {
+				c.log.Errorf("productsConsumerGroup.updateProductWorker.json.Marshal: %v", err)
+				continue
+			}
+
+			if err := w.WriteMessages(ctx, kafka.Message{
+				Value: errMsgBytes,
+			}); err != nil {
+				continue
+			}
 		}
 
 		if err := r.CommitMessages(ctx, m); err != nil {
