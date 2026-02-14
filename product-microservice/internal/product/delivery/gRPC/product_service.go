@@ -52,11 +52,6 @@ func (p *ProductGRPCService) CreateProduct(ctx context.Context, req *productServ
 		Rating:      int64(req.GetRating()),
 	}
 
-	if err := p.validate.StructCtx(ctx, product); err != nil {
-		p.log.Errorf("validate.StructCtx: %v", err)
-		return nil, grpcerrors.ErrorResponse(err, err.Error())
-	}
-
 	created, err := p.productUC.CreateProduct(ctx, product)
 	if err != nil {
 		p.log.Errorf("productUC.CreateProduct: %v", err)
