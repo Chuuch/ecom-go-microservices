@@ -16,6 +16,7 @@ type Config struct {
 	Metrics    MetricsConfig
 	MongoDB    MongoDBConfig
 	Kafka      KafkaConfig
+	Http       HttpConfig
 }
 
 // Server config
@@ -62,6 +63,17 @@ type MongoDBConfig struct {
 // Kafka config
 type KafkaConfig struct {
 	Brokers []string
+}
+
+// Http config
+type HttpConfig struct {
+	Port              string
+	PprofPort         string
+	ReadTimeout       time.Duration
+	WriteTimeout      time.Duration
+	Timeout           time.Duration
+	CookieLifetime    time.Duration
+	SessionCookieName string
 }
 
 // Load config file from given path

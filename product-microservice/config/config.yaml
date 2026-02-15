@@ -27,3 +27,11 @@ MongoDB:
   DB: "products"
 Kafka:
   Brokers: ["kafka1:19091", "kafka2:19092", "kafka3:19093"]
+Http:
+  Port: :5007
+  PprofPort: :8100
+  ReadTimeout: 5
+  WriteTimeout: 5
+  Timeout: 15
+  CookieLifetime: 44640
+  SessionCookieName: "session_token"
