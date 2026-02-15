@@ -122,16 +122,13 @@ func (c *ProductsConsumerGroup) updateProductWorker(ctx context.Context, cancel 
 			return nil
 		}, retry.Attempts(retryAttempts), retry.Delay(retryDelay), retry.Context(ctx)); err != nil {
 			errorMessages.Inc()
-			if err != nil {
+			c.log.Errorf("retry.Do: %v", err)
+			if err := c.publishErrorMessage(ctx, w, m, err); err != nil {
 				errorMessages.Inc()
-				c.log.Errorf("retry.Do: %v", err)
-				if err := c.publishErrorMessage(ctx, w, m, err); err != nil {
-					errorMessages.Inc()
-					c.log.Errorf("productsConsumerGroup.updateProductWorker.publishErrorMessage: %v", err)
-					continue
-				}
+				c.log.Errorf("productsConsumerGroup.updateProductWorker.publishErrorMessage: %v", err)
 				continue
 			}
+			continue
 		}
 
 		if err := r.CommitMessages(ctx, m); err != nil {
