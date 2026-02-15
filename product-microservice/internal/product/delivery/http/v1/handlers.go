@@ -56,3 +56,27 @@ func (h *productHandlers) CreateProduct() echo.HandlerFunc {
 		return c.JSON(http.StatusCreated, created)
 	}
 }
+
+func (h *productHandlers) UpdateProduct() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		span, ctx := opentracing.StartSpanFromContext(c.Request().Context(), "productHandlers.UpdateRequest")
+		defer span.Finish()
+
+		updateRequests.Inc()
+
+		var prod models.Product
+		if err := c.Bind(&prod); err != nil {
+			h.log.Errorf("c.Bind: %v", err)
+			return httpErrors.ErrorCtxResponse(c, err)
+		}
+
+		updated, err := h.productUC.UpdateProduct(ctx, &prod)
+		if err != nil {
+			h.log.Errorf("productUC.UpdateProduct: %v", err)
+			return httpErrors.ErrorCtxResponse(c, err)
+		}
+
+		successRequests.Inc()
+		return c.JSON(http.StatusOK, updated)
+	}
+}
