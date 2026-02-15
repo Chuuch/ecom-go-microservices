@@ -1,6 +1,6 @@
 FROM golang:1.25.7-alpine3.23 AS builder
 
-RUN go get github.com/githubnemo/CompileDaemon
+RUN go install github.com/githubnemo/CompileDaemon@latest
 WORKDIR /app
 
 COPY . /app
