@@ -1,0 +1,12 @@
+FROM golang:1.25.7-alpine3.23 AS builder
+
+RUN go get github.com/githubnemo/CompileDaemon
+WORKDIR /app
+
+COPY . /app
+
+RUN go mod download
+
+EXPOSE 5555
+
+ENTRYPOINT [ "CompileDaemon", "--build", "go build -o main cmd/main.go", "--command", "./main" ]
