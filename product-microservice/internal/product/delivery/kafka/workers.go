@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/avast/retry-go"
 	"github.com/chuuch/product-microservice/internal/models"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -50,13 +51,23 @@ func (c *ProductsConsumerGroup) createProductWorker(ctx context.Context, cancel 
 			continue
 		}
 
-		created, err := c.productsUC.CreateProduct(ctx, &prod)
-		if err != nil {
-			if err := c.publishErrorMessage(ctx, w, m, err); err != nil {
-				errorMessages.Inc()
-				c.log.Errorf("productsConsumerGroup.createProductWorker.publishErrorMessage: %v", err)
-				continue
+		if err := c.validate.StructCtx(ctx, &prod); err != nil {
+			errorMessages.Inc()
+			c.log.Errorf("validate.StructCtx: %v", err)
+			continue
+		}
+
+		if err := retry.Do(func() error {
+			created, err := c.productsUC.CreateProduct(ctx, &prod)
+			if err != nil {
+				return err
 			}
+			c.log.Infof("Created product: %v", created.ProductID)
+			return nil
+		}, retry.Attempts(retryAttempts), retry.Delay(retryDelay), retry.Context(ctx)); err != nil {
+			errorMessages.Inc()
+			c.log.Errorf("retry.Do: %v", err)
+			continue
 		}
 
 		if err := r.CommitMessages(ctx, m); err != nil {
@@ -66,7 +77,6 @@ func (c *ProductsConsumerGroup) createProductWorker(ctx context.Context, cancel 
 		}
 
 		successMessages.Inc()
-		c.log.Infof("WORKER: %v, created product: %v", workerID, created.ProductID)
 	}
 }
 
@@ -103,11 +113,23 @@ func (c *ProductsConsumerGroup) updateProductWorker(ctx context.Context, cancel 
 			continue
 		}
 
-		updated, err := c.productsUC.UpdateProduct(ctx, &prod)
-		if err != nil {
-			if err := c.publishErrorMessage(ctx, w, m, err); err != nil {
+		if err := retry.Do(func() error {
+			updated, err := c.productsUC.UpdateProduct(ctx, &prod)
+			if err != nil {
+				return err
+			}
+			c.log.Infof("Updated product: %v", updated.ProductID)
+			return nil
+		}, retry.Attempts(retryAttempts), retry.Delay(retryDelay), retry.Context(ctx)); err != nil {
+			errorMessages.Inc()
+			if err != nil {
 				errorMessages.Inc()
-				c.log.Errorf("productsConsumerGroup.updateProductWorker.publishErrorMessage: %v", err)
+				c.log.Errorf("retry.Do: %v", err)
+				if err := c.publishErrorMessage(ctx, w, m, err); err != nil {
+					errorMessages.Inc()
+					c.log.Errorf("productsConsumerGroup.updateProductWorker.publishErrorMessage: %v", err)
+					continue
+				}
 				continue
 			}
 		}
@@ -119,6 +141,5 @@ func (c *ProductsConsumerGroup) updateProductWorker(ctx context.Context, cancel 
 		}
 
 		successMessages.Inc()
-		c.log.Infof("WORKER: %v, updated product: %v", workerID, updated.ProductID)
 	}
 }
