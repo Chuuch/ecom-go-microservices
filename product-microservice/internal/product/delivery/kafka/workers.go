@@ -87,6 +87,7 @@ func (c *ProductsConsumerGroup) updateProductWorker(ctx context.Context, cancel 
 	span.LogFields(log.String("ConsumerGroup", r.Config().GroupID))
 
 	defer wg.Done()
+	defer cancel()
 
 	for {
 		m, err := r.FetchMessage(ctx)
