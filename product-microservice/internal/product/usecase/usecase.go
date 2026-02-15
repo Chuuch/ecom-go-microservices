@@ -9,7 +9,6 @@ import (
 	"github.com/chuuch/product-microservice/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -31,22 +30,12 @@ func (u *productUC) CreateProduct(ctx context.Context, product *models.Product) 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.CreateProduct")
 	defer span.Finish()
 
-	if err := u.validate.StructCtx(ctx, product); err != nil {
-		u.log.Errorf("validate.StructCtx: %v", err)
-		return nil, errors.Wrap(err, "validate.StructCtx")
-	}
-
 	return u.productRepo.CreateProduct(ctx, product)
 }
 
 func (u *productUC) UpdateProduct(ctx context.Context, product *models.Product) (*models.Product, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.UpdateProduct")
 	defer span.Finish()
-
-	if err := u.validate.StructCtx(ctx, product); err != nil {
-		u.log.Errorf("validate.StructCtx: %v", err)
-		return nil, errors.Wrap(err, "validate.StructCtx")
-	}
 
 	return u.productRepo.UpdateProduct(ctx, product)
 }
