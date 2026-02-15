@@ -3,7 +3,7 @@ services:
     container_name: product_microservice
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - 5555:5555
       - 5007:5007
