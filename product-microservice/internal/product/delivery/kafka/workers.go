@@ -4,11 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"sync"
+	"time"
 
 	"github.com/chuuch/product-microservice/internal/models"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/segmentio/kafka-go"
+)
+
+const (
+	retryAttempts = 2
+	retryDelay    = 1 * time.Second
 )
 
 func (c *ProductsConsumerGroup) createProductWorker(ctx context.Context, cancel context.CancelFunc, r *kafka.Reader, w *kafka.Writer, wg *sync.WaitGroup, workerID int) {

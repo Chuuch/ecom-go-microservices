@@ -87,7 +87,7 @@ func (s *Server) Start() error {
 	productsService.RegisterProductServiceServer(grpcServer, productService)
 	grpc_prometheus.Register(grpcServer)
 
-	productsConsumerGroup := kafka.NewProductsConsumerGroup(s.cfg.Kafka.Brokers, "products_group", s.cfg, productUC, s.logger)
+	productsConsumerGroup := kafka.NewProductsConsumerGroup(s.cfg.Kafka.Brokers, "products_group", s.cfg, productUC, s.logger, validate)
 	productsConsumerGroup.RunConsumers(ctx, cancel)
 
 	go func() {

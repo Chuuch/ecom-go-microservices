@@ -9,6 +9,7 @@ import (
 	"github.com/chuuch/product-microservice/internal/models"
 	"github.com/chuuch/product-microservice/internal/product"
 	"github.com/chuuch/product-microservice/pkg/logger"
+	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/compress"
@@ -21,16 +22,25 @@ type ProductsConsumerGroup struct {
 	log        logger.Logger
 	cfg        *config.Config
 	productsUC product.UseCase
+	validate   *validator.Validate
 }
 
 // NewProductsConsumerGroup constructor
-func NewProductsConsumerGroup(brokers []string, groupID string, cfg *config.Config, productsUC product.UseCase, log logger.Logger) *ProductsConsumerGroup {
+func NewProductsConsumerGroup(
+	brokers []string,
+	groupID string,
+	cfg *config.Config,
+	productsUC product.UseCase,
+	log logger.Logger,
+	validate *validator.Validate,
+) *ProductsConsumerGroup {
 	return &ProductsConsumerGroup{
 		Brokers:    brokers,
 		GroupID:    groupID,
 		cfg:        cfg,
 		productsUC: productsUC,
 		log:        log,
+		validate:   validate,
 	}
 }
 
