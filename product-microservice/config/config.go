@@ -17,6 +17,7 @@ type Config struct {
 	MongoDB    MongoDBConfig
 	Kafka      KafkaConfig
 	Http       HttpConfig
+	Redis      RedisConfig
 }
 
 // Server config
@@ -74,6 +75,19 @@ type HttpConfig struct {
 	Timeout           time.Duration
 	CookieLifetime    time.Duration
 	SessionCookieName string
+}
+
+// Redis config
+type RedisConfig struct {
+	RedisAddr      string
+	RedisPassword  string
+	RedisDB        int
+	RedisDefaultDB string
+	MinIdleConns   int
+	PoolSize       int
+	PoolTimeout    int
+	Password       string
+	DB             int
 }
 
 // Load config file from given path

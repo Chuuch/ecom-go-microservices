@@ -35,3 +35,13 @@ Http:
   Timeout: 15
   CookieLifetime: 44640
   SessionCookieName: "session_token"
+Redis:
+  RedisAddr: "redis:6379"
+  RedisPassword:
+  RedisDB: 0
+  RedisDefaultDB: 0
+  MinIdleConns: 200
+  PoolSize: 12000
+  PoolTimeout: 240
+  Password: ""
+  DB: 0
