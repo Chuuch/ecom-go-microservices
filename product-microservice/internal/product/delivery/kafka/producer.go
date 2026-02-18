@@ -48,3 +48,21 @@ func (p *productsProducer) GetNewKafkaWriter(topic string) *kafka.Writer {
 	}
 	return w
 }
+
+func (p *productsProducer) Run() {
+	p.createWriter = p.GetNewKafkaWriter(createProductTopic)
+	p.updateWriter = p.GetNewKafkaWriter(updateProductTopic)
+}
+
+func (p *productsProducer) Close() {
+	p.createWriter.Close()
+	p.updateWriter.Close()
+}
+
+func (p *productsProducer) PublishCreate(ctx context.Context, msgs ...kafka.Message) error {
+	return p.createWriter.WriteMessages(ctx, msgs...)
+}
+
+func (p *productsProducer) PublishUpdate(ctx context.Context, msgs ...kafka.Message) error {
+	return p.updateWriter.WriteMessages(ctx, msgs...)
+}
