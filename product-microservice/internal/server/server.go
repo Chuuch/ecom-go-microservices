@@ -10,6 +10,7 @@ import (
 
 	"github.com/chuuch/product-microservice/config"
 	"github.com/chuuch/product-microservice/internal/interceptors"
+	"github.com/chuuch/product-microservice/internal/middleware"
 	"github.com/chuuch/product-microservice/internal/product/repository"
 	"github.com/chuuch/product-microservice/internal/product/usecase"
 	"github.com/chuuch/product-microservice/pkg/logger"
@@ -29,6 +30,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	productService "github.com/chuuch/product-microservice/internal/product/delivery/gRPC"
+	productHttpV1 "github.com/chuuch/product-microservice/internal/product/delivery/http/v1"
 	"github.com/chuuch/product-microservice/internal/product/delivery/kafka"
 	productsService "github.com/chuuch/product-microservice/proto/product"
 )
@@ -62,6 +64,7 @@ func (s *Server) Start() error {
 	productUC := usecase.NewProductUC(productMongoRepo, s.logger, validate)
 
 	im := interceptors.NewInterceptorManager(s.logger, s.cfg)
+	mw := middleware.NewMiddlewareManager(s.logger, s.cfg)
 
 	l, err := net.Listen("tcp", s.cfg.Server.Port)
 	if err != nil {
@@ -88,6 +91,16 @@ func (s *Server) Start() error {
 	productService := productService.NewProductGRPCService(productUC, s.logger, validate)
 	productsService.RegisterProductServiceServer(grpcServer, productService)
 	grpc_prometheus.Register(grpcServer)
+
+	v1 := s.echo.Group("/api/v1")
+	v1.Use(mw.Metrics)
+	productHandlers := productHttpV1.NewProductHandlers(s.logger, productUC, validate, v1, mw)
+	productHandlers.MapRoutes()
+
+	go func() {
+		s.logger.Infof("HTTP Server is running on port: %s", s.cfg.Http.Port)
+		s.StartHTTP()
+	}()
 
 	productsConsumerGroup := kafka.NewProductsConsumerGroup(s.cfg.Kafka.Brokers, "products_group", s.cfg, productUC, s.logger, validate)
 	productsConsumerGroup.RunConsumers(ctx, cancel)
