@@ -10,6 +10,7 @@ import (
 	"github.com/chuuch/product-microservice/pkg/kafka"
 	"github.com/chuuch/product-microservice/pkg/logger"
 	"github.com/chuuch/product-microservice/pkg/mongodb"
+	"github.com/chuuch/product-microservice/pkg/redis"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -76,7 +77,12 @@ func main() {
 	}
 	appLogger.Infof("Kafka connected: %v", brokers)
 
+	// Init Redis
+	redisClient := redis.NewRedisClient(cfg)
+	defer redisClient.Close()
+	appLogger.Info("Redis connected")
+
 	// Init Server
-	s := server.NewServer(appLogger, cfg, tracer, mongoDBConn)
+	s := server.NewServer(appLogger, cfg, tracer, mongoDBConn, redisClient)
 	appLogger.Fatal(s.Start())
 }
