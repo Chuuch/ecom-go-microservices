@@ -24,7 +24,7 @@ type productRedisRepo struct {
 }
 
 // NewProductRedisRepository constructor
-func NewProductRedisRepository(prefix string, redis *redis.Client) *productRedisRepo {
+func NewProductRedisRepository(redis *redis.Client) *productRedisRepo {
 	return &productRedisRepo{
 		prefix: prefix,
 		redis:  redis,
@@ -60,6 +60,14 @@ func (r *productRedisRepo) GetProductByID(ctx context.Context, productID primiti
 	}
 
 	return &res, nil
+}
+
+// DeleteProduct delete product by id from redis
+func (r *productRedisRepo) DeleteProduct(ctx context.Context, productID primitive.ObjectID) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "productRedisRepo.DeleteProduct")
+	defer span.Finish()
+
+	return r.redis.Del(ctx, r.createKey(productID)).Err()
 }
 
 func (r *productRedisRepo) createKey(productID primitive.ObjectID) string {
