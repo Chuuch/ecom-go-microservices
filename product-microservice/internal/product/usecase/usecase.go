@@ -9,6 +9,7 @@ import (
 	"github.com/chuuch/product-microservice/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,13 +17,15 @@ type productUC struct {
 	productRepo product.MongoRepository
 	log         logger.Logger
 	validate    *validator.Validate
+	redisRepo   product.RedisRepository
 }
 
-func NewProductUC(productRepo product.MongoRepository, log logger.Logger, validate *validator.Validate) *productUC {
+func NewProductUC(productRepo product.MongoRepository, log logger.Logger, validate *validator.Validate, redisRepo product.RedisRepository) *productUC {
 	return &productUC{
 		productRepo: productRepo,
 		log:         log,
 		validate:    validate,
+		redisRepo:   redisRepo,
 	}
 }
 
@@ -30,7 +33,16 @@ func (u *productUC) CreateProduct(ctx context.Context, product *models.Product) 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.CreateProduct")
 	defer span.Finish()
 
-	return u.productRepo.CreateProduct(ctx, product)
+	product, err := u.productRepo.CreateProduct(ctx, product)
+	if err != nil {
+		return nil, errors.Wrap(err, "productRepo.CreateProduct failed")
+	}
+
+	if err := u.redisRepo.SetProduct(ctx, product); err != nil {
+		return nil, errors.Wrap(err, "redisRepo.SetProduct failed")
+	}
+
+	return product, nil
 }
 
 func (u *productUC) UpdateProduct(ctx context.Context, product *models.Product) (*models.Product, error) {
@@ -44,7 +56,25 @@ func (u *productUC) GetProductByID(ctx context.Context, productID primitive.Obje
 	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.GetProductByID")
 	defer span.Finish()
 
-	return u.productRepo.GetProductByID(ctx, productID)
+	cached, err := u.productRepo.GetProductByID(ctx, productID)
+	if err != nil {
+		return nil, errors.Wrap(err, "redisRepo.GetProductByID failed")
+	}
+
+	if cached != nil {
+		return cached, nil
+	}
+
+	product, err := u.productRepo.GetProductByID(ctx, productID)
+	if err != nil {
+		return nil, errors.Wrap(err, "productRepo.GetProductByID failed")
+	}
+
+	if err := u.redisRepo.SetProduct(ctx, product); err != nil {
+		return nil, errors.Wrap(err, "redisRepo.SetProduct failed")
+	}
+
+	return product, nil
 }
 
 func (u *productUC) SearchProducts(ctx context.Context, query string, pagination *utils.Pagination) (*models.ProductsList, error) {
