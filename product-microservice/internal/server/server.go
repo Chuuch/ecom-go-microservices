@@ -19,6 +19,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -42,15 +43,17 @@ type Server struct {
 	tracer  opentracing.Tracer
 	mongoDB *mongo.Client
 	echo    *echo.Echo
+	redis   *redis.Client
 }
 
-func NewServer(logger logger.Logger, cfg *config.Config, tracer opentracing.Tracer, mongoDB *mongo.Client) *Server {
+func NewServer(logger logger.Logger, cfg *config.Config, tracer opentracing.Tracer, mongoDB *mongo.Client, redis *redis.Client) *Server {
 	return &Server{
 		logger:  logger,
 		cfg:     cfg,
 		tracer:  tracer,
 		mongoDB: mongoDB,
 		echo:    echo.New(),
+		redis:   redis,
 	}
 }
 
@@ -61,7 +64,8 @@ func (s *Server) Start() error {
 	validate := validator.New()
 
 	productMongoRepo := repository.NewProductMongoRepository(s.mongoDB)
-	productUC := usecase.NewProductUC(productMongoRepo, s.logger, validate)
+	productRedisRepo := repository.NewProductRedisRepository(s.redis)
+	productUC := usecase.NewProductUC(productMongoRepo, s.logger, validate, productRedisRepo)
 
 	im := interceptors.NewInterceptorManager(s.logger, s.cfg)
 	mw := middleware.NewMiddlewareManager(s.logger, s.cfg)
