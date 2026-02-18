@@ -1,0 +1,27 @@
+package redis
+
+import (
+	"time"
+
+	"github.com/chuuch/product-microservice/config"
+	"github.com/redis/go-redis/v9"
+)
+
+// NewRedisClient Returns a new redis client
+func NewRedisClient(cfg *config.Config) *redis.Client {
+	redisHost := cfg.Redis.RedisAddr
+	if redisHost == "" {
+		redisHost = ":6379"
+	}
+
+	client := redis.NewClient(&redis.Options{
+		Addr:         redisHost,
+		Password:     cfg.Redis.Password,
+		DB:           cfg.Redis.DB,
+		MinIdleConns: cfg.Redis.MinIdleConns,
+		PoolSize:     cfg.Redis.PoolSize,
+		PoolTimeout:  time.Duration(cfg.Redis.PoolTimeout) * time.Second,
+	})
+
+	return client
+}
