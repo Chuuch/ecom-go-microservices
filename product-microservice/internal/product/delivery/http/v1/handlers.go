@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/chuuch/product-microservice/internal/middleware"
 	"github.com/chuuch/product-microservice/internal/models"
 	"github.com/chuuch/product-microservice/internal/product"
 	httpErrors "github.com/chuuch/product-microservice/pkg/http_errors"
@@ -20,14 +21,16 @@ type productHandlers struct {
 	productUC product.UseCase
 	validate  *validator.Validate
 	group     *echo.Group
+	mw        middleware.MiddlewareManager
 }
 
-func NewProductHandlers(log logger.Logger, productUC product.UseCase, validate *validator.Validate, group *echo.Group) *productHandlers {
+func NewProductHandlers(log logger.Logger, productUC product.UseCase, validate *validator.Validate, group *echo.Group, mw middleware.MiddlewareManager) *productHandlers {
 	return &productHandlers{
 		log:       log,
 		productUC: productUC,
 		validate:  validate,
 		group:     group,
+		mw:        mw,
 	}
 }
 
