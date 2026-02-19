@@ -63,9 +63,13 @@ func (s *Server) Start() error {
 
 	validate := validator.New()
 
+	productsProducer := kafka.NewProductsProducer(s.logger, s.cfg)
+	productsProducer.Run()
+	defer productsProducer.Close()
+
 	productMongoRepo := repository.NewProductMongoRepository(s.mongoDB)
 	productRedisRepo := repository.NewProductRedisRepository(s.redis)
-	productUC := usecase.NewProductUC(productMongoRepo, s.logger, validate, productRedisRepo)
+	productUC := usecase.NewProductUC(productMongoRepo, s.logger, validate, productRedisRepo, productsProducer)
 
 	im := interceptors.NewInterceptorManager(s.logger, s.cfg)
 	mw := middleware.NewMiddlewareManager(s.logger, s.cfg)
