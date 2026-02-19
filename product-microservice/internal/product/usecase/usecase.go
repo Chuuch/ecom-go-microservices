@@ -2,30 +2,43 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 
 	"github.com/chuuch/product-microservice/internal/models"
 	"github.com/chuuch/product-microservice/internal/product"
+
+	productKafka "github.com/chuuch/product-microservice/internal/product/delivery/kafka"
 	"github.com/chuuch/product-microservice/pkg/logger"
 	"github.com/chuuch/product-microservice/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type productUC struct {
-	productRepo product.MongoRepository
-	log         logger.Logger
-	validate    *validator.Validate
-	redisRepo   product.RedisRepository
+	productRepo      product.MongoRepository
+	log              logger.Logger
+	validate         *validator.Validate
+	redisRepo        product.RedisRepository
+	productsProducer productKafka.ProductsProducer
 }
 
-func NewProductUC(productRepo product.MongoRepository, log logger.Logger, validate *validator.Validate, redisRepo product.RedisRepository) *productUC {
+func NewProductUC(
+	productRepo product.MongoRepository,
+	log logger.Logger,
+	validate *validator.Validate,
+	redisRepo product.RedisRepository,
+	productsProducer productKafka.ProductsProducer,
+) *productUC {
 	return &productUC{
-		productRepo: productRepo,
-		log:         log,
-		validate:    validate,
-		redisRepo:   redisRepo,
+		productRepo:      productRepo,
+		log:              log,
+		validate:         validate,
+		redisRepo:        redisRepo,
+		productsProducer: productsProducer,
 	}
 }
 
@@ -82,4 +95,34 @@ func (u *productUC) SearchProducts(ctx context.Context, query string, pagination
 	defer span.Finish()
 
 	return u.productRepo.SearchProducts(ctx, query, pagination)
+}
+
+func (u *productUC) PublishCreate(ctx context.Context, product *models.Product) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.PublishCreate")
+	defer span.Finish()
+
+	productBytes, err := json.Marshal(&product)
+	if err != nil {
+		return errors.Wrap(err, "json.Marshal failed")
+	}
+
+	return u.productsProducer.PublishCreate(ctx, kafka.Message{
+		Value: productBytes,
+		Time:  time.Now().UTC(),
+	})
+}
+
+func (u *productUC) PublishUpdate(ctx context.Context, product *models.Product) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "productUC.PublishUpdate")
+	defer span.Finish()
+
+	productBytes, err := json.Marshal(&product)
+	if err != nil {
+		return errors.Wrap(err, "json.Marshal failed")
+	}
+
+	return u.productsProducer.PublishUpdate(ctx, kafka.Message{
+		Value: productBytes,
+		Time:  time.Now().UTC(),
+	})
 }
