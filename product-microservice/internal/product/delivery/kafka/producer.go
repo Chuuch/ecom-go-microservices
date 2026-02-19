@@ -33,7 +33,7 @@ func NewProductsProducer(log logger.Logger, cfg *config.Config) *productsProduce
 }
 
 // GetNewKafkaWriter Create new kafka writer
-func (p *productsProducer) GetNewKafkaWriter(topic string) *kafka.Writer {
+func (p *productsProducer) GetNewWriter(topic string) *kafka.Writer {
 	w := &kafka.Writer{
 		Addr:         kafka.TCP(p.cfg.Kafka.Brokers...),
 		Topic:        topic,
@@ -50,8 +50,8 @@ func (p *productsProducer) GetNewKafkaWriter(topic string) *kafka.Writer {
 }
 
 func (p *productsProducer) Run() {
-	p.createWriter = p.GetNewKafkaWriter(createProductTopic)
-	p.updateWriter = p.GetNewKafkaWriter(updateProductTopic)
+	p.createWriter = p.GetNewWriter(createProductTopic)
+	p.updateWriter = p.GetNewWriter(updateProductTopic)
 }
 
 func (p *productsProducer) Close() {
