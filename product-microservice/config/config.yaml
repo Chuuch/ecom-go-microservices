@@ -2,15 +2,46 @@ AppVersion: 1.0.0
 Server:
   Port: :5555
   Development: true
+  Timeout: 15
+  ReadTimeout: 5
+  WriteTimeout: 5
+  MaxConnectionIdle: 5
+  MaxConnectionAge: 5
 Logger:
   DisableCaller: false
   DisableStackTrace: false
   Encoding: json
   Level: info
 Jaeger:
-  Host: localhost:6831
+  Host: jaeger:6831
   ServiceName: products_microservice
   LogSpans: false
 Metrics:
+  Port: :7070
   URL: 0.0.0.0:7071
   ServiceName: products_microservice
+MongoDB:
+  URI: mongodb://mongodb:27017
+  User: "admin"
+  Password: "admin"
+  DB: "products"
+Kafka:
+  Brokers: ["kafka1:19091", "kafka2:19092", "kafka3:19093"]
+Http:
+  Port: :5007
+  PprofPort: :8100
+  ReadTimeout: 5
+  WriteTimeout: 5
+  Timeout: 15
+  CookieLifetime: 44640
+  SessionCookieName: "session_token"
+Redis:
+  RedisAddr: "redis:6379"
+  RedisPassword:
+  RedisDB: 0
+  RedisDefaultDB: 0
+  MinIdleConns: 200
+  PoolSize: 12000
+  PoolTimeout: 240
+  Password: ""
+  DB: 0

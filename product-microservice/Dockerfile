@@ -28,10 +28,15 @@ RUN cp /build/service .
 
 # Step 2 build a small image
 FROM alpine:latest
-RUN apk add --no-cache add ca-certificates
+RUN apk add --no-cache ca-certificates
+
+WORKDIR /app
 
 # Copy binary from /dist into our base image
 COPY --from=builder /dist/service .
+
+# Copy config directory from builder
+COPY --from=builder /build/config ./config
 
 # Expose port 5000
 EXPOSE 5000

@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -12,12 +13,22 @@ type Config struct {
 	Server     ServerConfig
 	Logger     LoggerConfig
 	Jaeger     JaegerConfig
+	Metrics    MetricsConfig
+	MongoDB    MongoDBConfig
+	Kafka      KafkaConfig
+	Http       HttpConfig
+	Redis      RedisConfig
 }
 
 // Server config
 type ServerConfig struct {
-	Port        string
-	Development bool
+	Port              string
+	Development       bool
+	Timeout           time.Duration
+	ReadTimeout       time.Duration
+	WriteTimeout      time.Duration
+	MaxConnectionIdle time.Duration
+	MaxConnectionAge  time.Duration
 }
 
 // Logger config
@@ -37,8 +48,46 @@ type JaegerConfig struct {
 
 // Metrics config
 type MetricsConfig struct {
+	Port        string
 	URL         string
 	ServiceName string
+}
+
+// MongoDB config
+type MongoDBConfig struct {
+	URI      string
+	User     string
+	Password string
+	DB       string
+}
+
+// Kafka config
+type KafkaConfig struct {
+	Brokers []string
+}
+
+// Http config
+type HttpConfig struct {
+	Port              string
+	PprofPort         string
+	ReadTimeout       time.Duration
+	WriteTimeout      time.Duration
+	Timeout           time.Duration
+	CookieLifetime    time.Duration
+	SessionCookieName string
+}
+
+// Redis config
+type RedisConfig struct {
+	RedisAddr      string
+	RedisPassword  string
+	RedisDB        int
+	RedisDefaultDB string
+	MinIdleConns   int
+	PoolSize       int
+	PoolTimeout    int
+	Password       string
+	DB             int
 }
 
 // Load config file from given path

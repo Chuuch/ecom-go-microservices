@@ -1,55 +1,88 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"log"
-	"net/http"
 
 	"github.com/chuuch/product-microservice/config"
+	"github.com/chuuch/product-microservice/internal/server"
 	"github.com/chuuch/product-microservice/pkg/jaeger"
+	"github.com/chuuch/product-microservice/pkg/kafka"
 	"github.com/chuuch/product-microservice/pkg/logger"
+	"github.com/chuuch/product-microservice/pkg/mongodb"
+	"github.com/chuuch/product-microservice/pkg/redis"
 	"github.com/opentracing/opentracing-go"
 )
 
 func main() {
 	log.Printf("Starting product microservice")
 
-	c, err := config.ParseConfig()
+	// Init context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Init config
+	cfg, err := config.ParseConfig()
 	if err != nil {
 		log.Fatalf("ParseConfig: %v", err)
 	}
 
-	appLogger := logger.NewApiLogger(c)
+	// Init logger
+	appLogger := logger.NewApiLogger(cfg)
 	appLogger.InitLogger()
 	appLogger.Info("Logger initialized")
 	appLogger.Infof(
 		"AppVersion: %s, LogLevel: %s, DevelopmentMode: %s",
-		c.AppVersion,
-		c.Logger.Level,
-		c.Server.Development,
+		cfg.AppVersion,
+		cfg.Logger.Level,
+		cfg.Server.Development,
 	)
-	appLogger.Infof("Successfully parsed config: %v", c.AppVersion)
+	appLogger.Infof("Successfully parsed config: %v", cfg.AppVersion)
 
-	tracer, closer, err := jaeger.InitJaeger(c)
+	// Init Jaeger
+	tracer, closer, err := jaeger.InitJaeger(cfg)
 	if err != nil {
 		appLogger.Fatalf("cannot create tracer: %v", err)
 	}
 	appLogger.Info("Jaeger initialized")
 
+	// Init Opentracing
 	opentracing.SetGlobalTracer(tracer)
 	defer closer.Close()
 	appLogger.Info("Opentracing initialized")
 
-	http.HandleFunc("/api/v1", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("REQUEST: %v", r.RemoteAddr)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(map[string]string{"message": "Hello world!"}); err != nil {
-			log.Printf("ERROR: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+	// Init MongoDB
+	mongoDBConn, err := mongodb.NewMongoDBConn(ctx, cfg)
+	if err != nil {
+		appLogger.Fatal("cannot initialize MongoDB connection", err)
+	}
+	defer func() {
+		if err := mongoDBConn.Disconnect(ctx); err != nil {
+			appLogger.Fatal("cannot disconnect from MongoDB", err)
 		}
-	})
-	log.Printf("Server is listening on port: %v", c.Server.Port)
-	log.Fatal(http.ListenAndServe(c.Server.Port, nil))
+	}()
+	appLogger.Infof("MongoDB connected: %v", mongoDBConn.NumberSessionsInProgress())
+
+	// Init Kafka
+	conn, err := kafka.NewKafkaConnection(cfg)
+	if err != nil {
+		appLogger.Fatal("cannot create Kafka connection", err)
+	}
+	defer conn.Close()
+
+	// Get brokers
+	brokers, err := conn.Brokers()
+	if err != nil {
+		appLogger.Fatal("cannot get brokers", err)
+	}
+	appLogger.Infof("Kafka connected: %v", brokers)
+
+	// Init Redis
+	redisClient := redis.NewRedisClient(cfg)
+	defer redisClient.Close()
+	appLogger.Info("Redis connected")
+
+	// Init Server
+	s := server.NewServer(appLogger, cfg, tracer, mongoDBConn, redisClient)
+	appLogger.Fatal(s.Start())
 }
