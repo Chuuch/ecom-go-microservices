@@ -1,0 +1,109 @@
+services:
+  redis:
+    image: redis:8.4.0-alpine
+    container_name: ecom_auth_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  postgresql:
+    image: postgres:17-alpine
+    container_name: ecom_auth_postgresql
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ecom_auth_db
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+
+  prometheus:
+    container_name: prometheus_container
+    image: prom/prometheus:latest
+    volumes:
+      - ./docker/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      default:
+        aliases:
+          - prometheus
+
+  node-exporter:
+    container_name: node_exporter_container
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+
+  grafana:
+    container_name: grafana_container
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - default
+
+  jaeger:
+    container_name: jaeger_container
+    image: jaegertracing/all-in-one:1.72.0
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+
+  auth-microservice:
+    container_name: auth_microservice_container
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.HotReload
+    ports:
+      - "5001:5001"
+      - "5555:5555"
+      - "7070:7070"
+    depends_on:
+      - redis
+      - postgresql
+      - prometheus
+      - node-exporter
+      - grafana
+      - jaeger
+    environment:
+      - config=docker
+    restart: always
+    volumes:
+      - ./cmd:/app/cmd:ro
+      - ./internal:/app/internal:ro
+      - ./pkg:/app/pkg:ro
+      - ./proto:/app/proto:ro
+
+  rabbitmq:
+    container_name: rabbitmq_container
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+    
+
+networks:
+  default:
+    name: ecom_network
+
+volumes:
+  pgdata:
