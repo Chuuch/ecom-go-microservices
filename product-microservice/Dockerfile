@@ -27,7 +27,8 @@ WORKDIR /dist
 RUN cp /build/service .
 
 # Step 2 build a small image
-FROM scratch
+FROM alpine:latest
+RUN apk add --no-cache add ca-certificates
 
 # Copy binary from /dist into our base image
 COPY --from=builder /dist/service .

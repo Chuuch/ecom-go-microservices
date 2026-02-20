@@ -1,0 +1,16 @@
+AppVersion: 1.0.0
+Server:
+  Port: :5555
+  Development: true
+Logger:
+  DisableCaller: false
+  DisableStackTrace: false
+  Encoding: json
+  Level: info
+Jaeger:
+  Host: localhost:6831
+  ServiceName: products_microservice
+  LogSpans: false
+Metrics:
+  URL: 0.0.0.0:7071
+  ServiceName: products_microservice
