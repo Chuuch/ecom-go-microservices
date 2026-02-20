@@ -1,0 +1,15 @@
+Server:
+  AppVersion: 1.0.0
+  Port: :5001
+  Development: true
+
+Logger:
+  Level: info
+  Development: true
+  DisableCaller: false
+  Encoding: console
+
+Jaeger:
+  ServiceName: "search_microservice"
+  Host: "http://localhost:14268/api/traces"
+  LogSpans: true
