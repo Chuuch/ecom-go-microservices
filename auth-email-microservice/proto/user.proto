@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package userService;
+
+option go_package = ".;userService";
+
+import "google/protobuf/timestamp.proto";
+
+// Session is the session message
+message Session {
+    string session = 1;
+}
+
+// User is the user message
+message User {
+   string uuid = 1;
+   string first_name = 2;
+   string last_name = 3;
+   string password = 4;
+   string email = 5;
+   string role = 6;
+   string avatar = 7;
+   google.protobuf.Timestamp created_at = 8;
+   google.protobuf.Timestamp updated_at = 9;
+}
+
+// RegisterRequest is the request for the Register method
+message RegisterRequest {
+    string email = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string password = 4;
+    string role = 5;
+    string avatar = 6;
+}
+
+// RegisterResponse is the response for the Register method
+message RegisterResponse {
+    User user = 1;
+}
+
+// FindByEmail Request is the request for the FindByEmail method
+message FindByEmailRequest {
+    string email = 1;
+}
+
+// FindByEmailResponse is the response for the FindByEmail method
+message FindByEmailResponse {
+    User user = 1;
+}
+
+// FindByID Reqeest is the request for the FindByID method
+message FindByIDRequest {
+    string user_id = 1;
+}
+
+// FindByIDResponse is the response for the FindByID method
+message FindByIDResponse {
+    User user = 1;
+}
+
+// Login request
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+// Login response
+message LoginResponse {
+    User user = 1;
+    string session_id = 2;
+}
+
+// Get me request
+message GetMeRequest {
+
+}
+
+// Get me response
+message GetMeResponse {
+    User user = 1;
+}
+
+// Logout request
+message LogoutRequest {}
+
+// Logout response
+message LogoutResponse {}
+
+// UserService is the service for the user microservice
+service UserService {
+    // Register is the method to register a new user
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+    // FindByEmail is the method to find a user by email
+    rpc FindByEmail(FindByEmailRequest) returns (FindByEmailResponse);
+    // FindByID is the method to find a user by id
+    rpc FindByID(FindByIDRequest) returns (FindByIDResponse);
+    // Login is the method to log a user in
+    rpc Login(LoginRequest) returns (LoginResponse);
+    // Get me is the method to get the current user
+    rpc GetMe(GetMeRequest) returns (GetMeResponse);
+    // Logout is the method to log a user out
+    rpc Logout(LogoutRequest) returns (LogoutResponse);
+}

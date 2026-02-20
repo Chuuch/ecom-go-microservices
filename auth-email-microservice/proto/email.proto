@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package userService;
+
+option go_package = ".;userService";
+
+import "google/protobuf/timestamp.proto";
+
+// Email message
+message Email {
+    string email_id = 1;
+    repeated string to = 2;
+    string from = 3;
+    string body = 4;
+    string subject = 5;
+    string content_type = 6;
+    google.protobuf.Timestamp created_at = 7;
+}
+
+// SendEmailRequest is the request for the SendEmail method
+message SendEmailRequest {
+    repeated string to = 1;
+    string subject = 2;
+    string body = 3;
+}
+
+// SendEmailResponse is the response for the SendEmail method
+message SendEmailResponse {
+    string status = 1;
+    
+}
+
+// Find email by id request
+message FindEmailByIdRequest {
+    string email_uuid = 1;
+}
+
+// Find email by id response
+message FindEmailByIdResponse {
+    Email email = 1;
+}
+
+// Find emails by receiver request
+message FindEmailsByReceiverRequest {
+    string receiver_email = 1;
+    uint64 page = 2;
+    uint64 size = 3;
+}
+
+// Find emails by receiver response
+message FindEmailsByReceiverResponse {
+    repeated Email email = 1;
+    uint64 total_pages = 2;
+    uint64 total_count = 3;
+    bool has_more = 4;
+    uint64 page = 5;
+    uint64 size = 6;
+}
+
+// EmailService is the service for emailing
+service EmailService {
+    // SendEmail is the method to send emails
+    rpc SendEmail(SendEmailRequest) returns (SendEmailResponse);
+    // Find email by id is the method to find an email by id
+    rpc FindEmailById(FindEmailByIdRequest) returns (FindEmailByIdResponse);
+    // Find emails by receiver is the method to find emails by receiver
+    rpc FindEmailsByReceiver(FindEmailsByReceiverRequest) returns (FindEmailsByReceiverResponse);
+}

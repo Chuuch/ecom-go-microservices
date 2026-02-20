@@ -1,0 +1,69 @@
+server:
+  AppVersion: 1.0.0-docker
+  Port: :5001
+  PprofPort: :5555
+  Mode: Development
+  JwtSecretKey: secretKey
+  CookieName: jwt-token
+  ReadTimeout: 10
+  WriteTimeout: 10
+  SSL: true
+  CtxDefaultTimeout: 12
+  CSRF: true
+  Debug: false
+  MaxConnectionIdle: 5
+  Timeout: 15
+  MaxConnectionAge: 5
+  Time: 120
+
+postgres:
+  PostgresHost: postgresql
+  PostgresPort: 5432
+  PostgresUser: postgres
+  PostgresPassword: postgres
+  PostgresDbName: ecom_auth_db
+  PostgresSSLMode: false
+  PostgresDriver: pgx
+
+redis:
+  RedisAddr: redis:6379
+  RedisPassword:
+  RedisDB: 0
+  RedisDefaultDB: 0
+  MinIdleConns: 200
+  PoolSize: 12000
+  PoolTimeout: 240
+  Password: ""
+  DB: 0
+
+logger:
+  Development: true
+  DisableCaller: false
+  DisableStackTrace: false
+  Encoding: console
+  Level: debug
+
+jaeger:
+  Host: http://localhost:14268/api/traces
+  ServiceName: AUTH_GRPC_SERVER
+  LogSpans: true
+
+session:
+  Name: session-id
+  Prefix: api-session
+  Expire: 3600
+
+metrics:
+  URL: 0.0.0.0:7070
+  ServiceName: AUTH_GRPC
+
+rabbitmq:
+  Host: rabbitmq
+  Port: 5672
+  User: guest
+  Password: guest
+  Exchange: email_exchange
+  Queue: emails_queue
+  RoutingKey: emails_routing_key
+  ConsumerTag: email_consumer
+  WorkerPoolSize: 24
