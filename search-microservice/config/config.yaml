@@ -14,3 +14,49 @@ Jaeger:
   Host: "http://localhost:14268/api/traces"
   LogSpans: true
   Enable: true
+
+Elastic:
+  Addresses: ["http://elastic:9200"]
+  Username: ""
+  Pasword: ""
+  APIKey: ""
+  Header: {}
+  EnableLogging: true
+
+ElasticMapping:
+  Path: "config/mappings.json"
+  Name: "products"
+  Alias: "products-alias"
+  ProductsIndex:
+    Path: "config/mappings.json"
+    Name: "products"
+    Alias: "products-alias"
+Http:
+  Port: "8080"
+  DebugErrorResponse: true
+  Development: true
+  IgnoredURIs: ["/health"]
+  ProductsPath: "/v1/products"
+
+RabbitMQ:
+  URI: "amqp://guest:guest@rabbitmq:5672"
+  ExchangeName: "search-microservice-exchange"
+  ExchangeKind: "direct"
+  QueueName: "search-microservice-queue"
+  BindingKey: "search-binding-key"
+  Concurency: 10
+  Consumer: "produts-consumer"
+  BulkIndexer:
+    NumWorkers: 10
+    FlushBytes: 20000000 # 20MB
+    FlushIntervalSeconds: 15
+    TimeoutMilliseconds: 5000 # 5 seconds
+  Probes:
+    ReadinessPath: "/health"
+    LivenessPath: "/health"
+    Port: "3001"
+    Pprof: "/debug/pprof"
+    PrometheusPath: "/metrics"
+    PrometheusPort: "8001"
+    ChecIntervalSeconds: 5
+

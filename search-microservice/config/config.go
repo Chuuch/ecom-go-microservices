@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/chuuch/search-microservice/pkg/esclient"
 	"github.com/spf13/viper"
 )
 
@@ -38,10 +39,13 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 }
 
 type Config struct {
-	Server  ServerConfig
-	Logger  LoggerConfig
-	Jaeger  JaegerConfig
-	Elastic ElasticConfig
+	Server   ServerConfig
+	Logger   LoggerConfig
+	Jaeger   JaegerConfig
+	Elastic  ElasticConfig
+	ElasticMapping ElasticMappingConfig
+	Http     HTTPConfig
+	RabbitMQ RabbitMQConfig
 }
 
 type ServerConfig struct {
@@ -71,4 +75,37 @@ type ElasticConfig struct {
 	APIKey        string
 	Header        http.Header
 	EnableLogging bool
+}
+
+type ElasticMappingConfig struct {
+	Path string
+	Name string
+	Alias string
+	ProductsIndex esclient.ElasticIndex
+}
+
+type HTTPConfig struct {
+	Port               string
+	DebugErrorResponse bool
+	Development        bool
+	IgnoredURIs        []string
+	ProductsPath       string
+}
+
+type RabbitMQConfig struct {
+	URI          string
+	ExchangeName string
+	ExchangeKind string
+	QueueName    string
+	BindingKey   string
+	Concurrency  int
+	Consumer     string
+	BulkIndexer  BulkIndexerConfig
+}
+
+type BulkIndexerConfig struct {
+	NumWorkers           int `mapstructure:"numWorkers" validated:"required"`
+	FlushBytes           int `mapstructure:"flushBytes" validated:"required"`
+	FlushIntervalSeconds int `mapstructure:"flushIntervalSeconds" validated:"required"`
+	TimeoutMilliseconds  int `mapstructure:"timeoutMilliseconds" validated:"required"`
 }
