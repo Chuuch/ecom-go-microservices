@@ -1,4 +1,24 @@
 services:
+  node01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.0
+    container_name: node01
+    restart: always
+    environment:
+      - discover.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+      - node.name=node01
+      - cluster.name=elasticsearch
+      - xpack.license.self_generated.type=basic
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./es-data01:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
   jaeger:
     container_name: jaeger_container
     image: jaegertracing/all-in-one:1.72.0
@@ -14,4 +34,7 @@ services:
       - "9411:9411"
     environment:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+volumes:
+  es-data01:
+    driver: local
     
