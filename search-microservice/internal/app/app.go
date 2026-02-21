@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,6 +17,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/go-playground/validator"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 )
 
 type App struct {
@@ -32,6 +35,75 @@ func NewApp(log logger.Logger, cfg *config.Config) *App {
 		doneCh:   make(chan struct{}),
 		validate: validator.New(),
 	}
+}
+
+func (a *App) initIndexes(ctx context.Context) error {
+	exists, err := a.isIndexExists(ctx, a.cfg.ElasticMapping.Name)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		if err := a.uploadElasticMappings(ctx, a.cfg.ElasticMapping.ProductsIndex); err != nil {
+			return err
+		}
+	}
+
+	a.log.Infof("Index %s created", a.cfg.ElasticMapping.Name)
+	return nil
+}
+
+func (a *App) isIndexExists(ctx context.Context, indexName string) (bool, error) {
+	response, err := esclient.Exists(ctx, a.elasticClient, []string{indexName})
+	if err != nil {
+		a.log.Errorf("Failed to check if index exists: %v", err)
+		return false, errors.Wrap(err, "failed to check if index exists")
+	}
+
+	defer response.Body.Close()
+
+	a.log.Info("Index exists response: %s", response.String())
+
+	exists := response.StatusCode == 200
+
+	return exists, nil
+}
+
+func (a *App) uploadElasticMappings(ctx context.Context, indexConfig esclient.ElasticIndex) error {
+	getwd, err := os.Getwd()
+	if err != nil {
+		return errors.Wrap(err, "failed to get working directory")
+	}
+
+	path := fmt.Sprintf("%s/%s", getwd, &indexConfig.Path)
+
+	mappingsFile, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer mappingsFile.Close()
+	
+	mappingBytes, err := io.ReadAll(mappingsFile)
+	if err != nil {
+		return err
+	}
+
+	a.log.Info("loaded elastic mappings file %s", path)
+
+	response, err := esclient.CreateIndex(ctx, a.elasticClient, indexConfig.Name, mappingBytes)
+	if err != nil {
+		return err
+	}
+
+	defer response.Body.Close()
+
+	if response.IsError() {
+		return errors.New(response.String())
+	}
+
+	a.log.Info("created index %s", response.String())
+	return nil
+
 }
 
 func (a *App) Run() error {
@@ -64,6 +136,10 @@ func (a *App) Run() error {
 	}
 
 	a.log.Infof("ElasticSearch is reachable %s", elasticResponse.String())
+
+	if err := a.initIndexes(ctx); err != nil {
+		return err
+	}
 
 	<-ctx.Done()
 	a.waitShutDown(3 * time.Second)
