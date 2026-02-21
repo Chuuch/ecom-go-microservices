@@ -13,3 +13,4 @@ Jaeger:
   ServiceName: "search_microservice"
   Host: "http://localhost:14268/api/traces"
   LogSpans: true
+  Enable: true
