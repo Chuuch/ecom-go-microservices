@@ -61,6 +61,7 @@ type JaegerConfig struct {
 	Host        string
 	ServiceName string
 	LogSpans    bool
+	Enable      bool
 }
 
 type ElasticConfig struct {
