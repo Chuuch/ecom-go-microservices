@@ -3,12 +3,13 @@ package esclient
 import (
 	"bytes"
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
+	"github.com/pkg/errors"
 )
 
 type ElasticIndex struct {
@@ -89,6 +90,49 @@ func Exists(ctx context.Context, esClient *elasticsearch.Client, indexes []strin
 
 	if response.IsError() && response.StatusCode != 404 {
 		return nil, errors.New(response.String())
+	}
+
+	return response, nil
+}
+
+func Search(
+	ctx context.Context,
+	esClient *elasticsearch.Client,
+	index,
+	term string,
+	fields []string,
+) (*esapi.Response, error) {
+	query := MultiMatchQuery{
+		Query: Query{
+			Bool: Bool{
+				Must: []any{MultiMatch{
+					Query:  term,
+					Fields: fields,
+				}},
+			},
+		},
+	}
+
+	dataBytes, err := json.Marshal(&query)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := esClient.Search(
+		esClient.Search.WithContext(ctx),
+		esClient.Search.WithIndex(index),
+		esClient.Search.WithBody(bytes.NewReader(dataBytes)),
+		esClient.Search.WithPretty(),
+		esClient.Search.WithHuman(),
+		esClient.Search.WithTimeout(5*time.Second),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if response.IsError() {
+		return nil, errors.Wrap(errors.New(response.String()), "failed to search")
 	}
 
 	return response, nil
