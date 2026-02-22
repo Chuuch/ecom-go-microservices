@@ -75,14 +75,14 @@ func (a *App) uploadElasticMappings(ctx context.Context, indexConfig esclient.El
 		return errors.Wrap(err, "failed to get working directory")
 	}
 
-	path := fmt.Sprintf("%s/%s", getwd, &indexConfig.Path)
+	path := fmt.Sprintf("%s/%s", getwd, indexConfig.Path)
 
 	mappingsFile, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 	defer mappingsFile.Close()
-	
+
 	mappingBytes, err := io.ReadAll(mappingsFile)
 	if err != nil {
 		return err
