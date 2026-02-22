@@ -15,22 +15,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-type elasticRepository struct {
+type ElasticRepository struct {
 	log      logger.Logger
 	cfg      *config.Config
 	esClient *elasticsearch.Client
 }
 
-func NewElasticRepository(log logger.Logger, cfg *config.Config, esClient *elasticsearch.Client) *elasticRepository {
-	return &elasticRepository{
+func NewElasticRepository(log logger.Logger, cfg *config.Config, esClient *elasticsearch.Client) *ElasticRepository {
+	return &ElasticRepository{
 		log:      log,
 		cfg:      cfg,
 		esClient: esClient,
 	}
 }
 
-func (e *elasticRepository) Index(ctx context.Context, product domain.Product) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "elasticRepository.Index")
+func (e *ElasticRepository) Index(ctx context.Context, product domain.Product) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ElasticRepository.Index")
 	defer span.Finish()
 
 	span.LogFields(log.Object("product", product))
@@ -59,5 +59,3 @@ func (e *elasticRepository) Index(ctx context.Context, product domain.Product) e
 	e.log.Info("product indexed successfully %s", response.String())
 	return nil
 }
-
-
