@@ -24,13 +24,13 @@ Elastic:
   EnableLogging: true
 
 ElasticMapping:
-  Path: "config/mappings.json"
-  Name: "products"
-  Alias: "products-alias"
+  path: "config/mappings.json"
+  name: "products"
+  alias: "products-alias"
   ProductsIndex:
-    Path: "config/mappings.json"
-    Name: "products"
-    Alias: "products-alias"
+    path: "config/mappings.json"
+    name: "products"
+    alias: "products-alias"
 Http:
   Port: "8080"
   DebugErrorResponse: true
