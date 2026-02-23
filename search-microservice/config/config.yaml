@@ -16,7 +16,7 @@ Jaeger:
   Enable: true
 
 Elastic:
-  Addresses: ["http://elastic:9200"]
+  Addresses: ["http://localhost:9200"]
   Username: ""
   Pasword: ""
   APIKey: ""
