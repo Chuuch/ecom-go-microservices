@@ -187,8 +187,25 @@ func (a *App) Run() error {
 
 	amqpChan, err := amqpConn.Channel()
 	a.amqpChan = amqpChan
-	
+
+	if err := a.amqpChan.Qos(1, 0, true); err != nil {
+		return err
+	}
+
 	a.log.Info("RabbitMQ cient initialized")
+
+	queue, err := rabbitmq.DeclareBinding(ctx, a.amqpChan, rabbitmq.ExchangeAndQueueBinding{
+		ExchangeName: a.cfg.RabbitMQ.ExchangeName,
+		ExchangeKind: a.cfg.RabbitMQ.ExchangeKind,
+		QueueName: a.cfg.RabbitMQ.QueueName,
+		BindingKey: a.cfg.RabbitMQ.BindingKey,
+		Concurrency: a.cfg.RabbitMQ.Concurrency,
+		Consumer: a.cfg.RabbitMQ.Consumer,
+	})
+	if err != nil {
+		return err
+	}
+	a.log.Info("RabbitMQ queue declared: %s", queue.Name)
 
 	// Initialize Elasticsearch
 	elasticSearchClient, err := elastic.NewElasticSearch(a.cfg)
