@@ -39,7 +39,7 @@ Http:
   ProductsPath: "/v1/products"
 
 RabbitMQ:
-  URI: "amqp://guest:guest@rabbitmq:5672"
+  URI: "amqp://guest:guest@localhost:5672"
   ExchangeName: "search-microservice-exchange"
   ExchangeKind: "direct"
   QueueName: "search-microservice-queue"
