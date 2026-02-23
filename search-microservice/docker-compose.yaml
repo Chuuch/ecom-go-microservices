@@ -45,6 +45,14 @@ services:
       - "9411:9411"
     environment:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+
+  rabbitmq:
+    image: rabbitmq:4.2.4-alpine
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "15672:15672"
+      - "5672:5672"
 volumes:
   es-data01:
     driver: local
