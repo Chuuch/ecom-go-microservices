@@ -12,9 +12,9 @@ import (
 
 	"github.com/chuuch/search-microservice/config"
 	"github.com/chuuch/search-microservice/internal/product/repository"
+	rabbitmqConsumer "github.com/chuuch/search-microservice/internal/product/transport/http/rabbitmq"
 	v1 "github.com/chuuch/search-microservice/internal/product/transport/http/v1"
 	"github.com/chuuch/search-microservice/internal/product/usecase"
-	"github.com/chuuch/search-microservice/pkg/elastic"
 	"github.com/chuuch/search-microservice/pkg/esclient"
 	"github.com/chuuch/search-microservice/pkg/jaeger"
 	"github.com/chuuch/search-microservice/pkg/logger"
@@ -40,6 +40,7 @@ type App struct {
 	misstypeManager   misstypemanager.MisstypeManager
 	amqpConn          *amqp.Connection
 	amqpChan          *amqp.Channel
+	amqpPublisher     rabbitmq.AmqpPublisher
 }
 
 func (a *App) loadKeysMappings() (*misstypemanager.KeyboardMisstypeManager, error) {
@@ -178,50 +179,32 @@ func (a *App) Run() error {
 	a.middlewareManager = middlewares.NewMiddlewareManager(a.log, a.cfg, nil)
 
 	// Initialize RabbitMQ
-	amqpConn, err := rabbitmq.NewRabbitMQ(a.cfg)
-	if err != nil {
+	if err := a.initRabbitMQ(ctx); err != nil {
 		return err
 	}
-	defer amqpConn.Close()
-	a.amqpConn = amqpConn
-
-	amqpChan, err := amqpConn.Channel()
-	a.amqpChan = amqpChan
-
-	if err := a.amqpChan.Qos(1, 0, true); err != nil {
-		return err
-	}
-
-	a.log.Info("RabbitMQ cient initialized")
+	defer a.closeRabbitMQ()
 
 	queue, err := rabbitmq.DeclareBinding(ctx, a.amqpChan, rabbitmq.ExchangeAndQueueBinding{
 		ExchangeName: a.cfg.RabbitMQ.ExchangeName,
 		ExchangeKind: a.cfg.RabbitMQ.ExchangeKind,
-		QueueName: a.cfg.RabbitMQ.QueueName,
-		BindingKey: a.cfg.RabbitMQ.BindingKey,
-		Concurrency: a.cfg.RabbitMQ.Concurrency,
-		Consumer: a.cfg.RabbitMQ.Consumer,
+		QueueName:    a.cfg.RabbitMQ.QueueName,
+		BindingKey:   a.cfg.RabbitMQ.BindingKey,
 	})
 	if err != nil {
 		return err
 	}
 	a.log.Info("RabbitMQ queue declared: %s", queue.Name)
 
+	if err := a.initRabbitMQPublisher(ctx); err != nil {
+		a.log.Error("Failed to initialize RabbitMQ publisher: %v", err)
+		return err
+	}
+
 	// Initialize Elasticsearch
-	elasticSearchClient, err := elastic.NewElasticSearch(a.cfg)
-	if err != nil {
+	if err := a.initElasticSearchClient(ctx); err != nil {
+		a.log.Error("Failed to initialize ElasticSearch client: %v", err)
 		return err
 	}
-	a.elasticClient = elasticSearchClient
-	a.log.Info("ElasticSearch client initialized")
-
-	// Check if ElasticSearch is reachable
-	elasticResponse, err := esclient.Info(ctx, a.elasticClient)
-	if err != nil {
-		return err
-	}
-
-	a.log.Infof("ElasticSearch is reachable %s", elasticResponse.String())
 
 	if err := a.initIndexes(ctx); err != nil {
 		return err
@@ -240,6 +223,27 @@ func (a *App) Run() error {
 	}()
 
 	a.log.Info("HTTP server started on port %s", a.cfg.Http.Port)
+
+	productConsumer := rabbitmqConsumer.NewProductConsumer(a.log, a.cfg, a.amqpConn, a.amqpChan, productUsecase, a.elasticClient)
+	if err := productConsumer.InitBulkIndexer(); err != nil {
+		a.log.Error("Failed to initialize bulk indexer: %v", err)
+		cancel()
+	}
+	defer productConsumer.Close(ctx)
+
+	go func() {
+		if err := rabbitmq.ConsumeQueue(
+			ctx,
+			a.amqpChan,
+			a.cfg.RabbitMQ.Concurrency,
+			queue.Name,
+			a.cfg.RabbitMQ.Consumer,
+			productConsumer.ConsumeIndexDeliveries,
+		); err != nil {
+			a.log.Error("Failed to consume queue: %v", err)
+			cancel()
+		}
+	}()
 
 	<-ctx.Done()
 	a.waitShutDown(3 * time.Second)
