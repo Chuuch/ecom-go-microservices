@@ -7,6 +7,7 @@ import (
 	"github.com/chuuch/search-microservice/internal/product/domain"
 	httpErrors "github.com/chuuch/search-microservice/pkg/http_errors"
 	"github.com/chuuch/search-microservice/pkg/logger"
+	"github.com/chuuch/search-microservice/pkg/utils"
 	"github.com/go-playground/validator"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
@@ -56,5 +57,24 @@ func (h *productController) index() echo.HandlerFunc {
 
 		h.log.Info("product indexed successfully %s", product.ID)
 		return c.JSON(http.StatusCreated, product)
+	}
+}
+
+func (h *productController) search() echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		span, ctx := opentracing.StartSpanFromContext(c.Request().Context(), "productController.Search")
+		defer span.Finish()
+
+		searchTerm := c.QueryParam("term")
+		pagination := utils.NewPaginationFromQueryParams(c.QueryParam("size"), c.QueryParam("page"))
+
+		searchResult, err := h.productUsecase.Search(ctx, searchTerm, pagination)
+		if err != nil {
+			h.log.Error("failed to search products: %v", err)
+			return httpErrors.ErrorCtxResponse(c, err, h.cfg.Http.DebugErrorResponse)
+		}
+
+		h.log.Info("search products successfully %v", searchResult)
+		return c.JSON(http.StatusOK, searchResult)
 	}
 }

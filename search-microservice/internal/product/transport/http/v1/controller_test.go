@@ -36,7 +36,7 @@ func TestIndexProduct(t *testing.T) {
 	response, err := client.R().
 		SetBody(product).
 		SetContext(ctx).
-		Post("http://localhost:8000/v1/products")
+		Post("http://localhost:8080/v1/products")
 
 	require.NoError(t, err)
 	require.NotNil(t, response)
