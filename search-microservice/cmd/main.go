@@ -4,8 +4,9 @@ import (
 	"log"
 
 	"github.com/chuuch/search-microservice/config"
+	"github.com/chuuch/search-microservice/internal/app"
+	"github.com/chuuch/search-microservice/pkg/jaeger"
 	"github.com/chuuch/search-microservice/pkg/logger"
-	"github.com/chuuch/search-microservice/pkg/logger/jaeger"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -32,8 +33,9 @@ func main() {
 		apiLogger.Fatalf("Failed to initialize Jaeger: %v", err)
 	}
 	defer closer.Close()
-	apiLogger.Info("Jaeger initialized")
 
 	opentracing.SetGlobalTracer(tracer)
-	apiLogger.Info("Opentracing initialized")
+
+	apiLogger.Info("Jaeger initialized")
+	apiLogger.Fatal(app.NewApp(apiLogger, cfg).Run())
 }
