@@ -16,8 +16,8 @@ import (
 	"github.com/chuuch/search-microservice/internal/product/usecase"
 	"github.com/chuuch/search-microservice/pkg/elastic"
 	"github.com/chuuch/search-microservice/pkg/esclient"
+	"github.com/chuuch/search-microservice/pkg/jaeger"
 	"github.com/chuuch/search-microservice/pkg/logger"
-	"github.com/chuuch/search-microservice/pkg/logger/jaeger"
 	"github.com/chuuch/search-microservice/pkg/middlewares"
 	misstypemanager "github.com/chuuch/search-microservice/pkg/misstype_manager"
 	"github.com/elastic/go-elasticsearch/v8"
@@ -171,7 +171,7 @@ func (a *App) Run() error {
 		a.log.Info("Jaeger initialized")
 	}
 
-	// a.middlewareManager = middlewares.NewMiddlewareManager(a.log, a.cfg, a.getHttpMetricsCb())
+	a.middlewareManager = middlewares.NewMiddlewareManager(a.log, a.cfg, nil)
 
 	// Initialize Elasticsearch
 	elasticSearchClient, err := elastic.NewElasticSearch(a.cfg)
@@ -193,7 +193,7 @@ func (a *App) Run() error {
 		return err
 	}
 
-	elasticRepository := repository.NewElasticRepository(a.log, a.cfg, a.elasticClient)
+	elasticRepository := repository.NewElasticRepository(a.log, a.cfg, a.elasticClient, a.misstypeManager)
 	productUsecase := usecase.NewProductUsecase(a.log, a.cfg, elasticRepository)
 	productController := v1.NewProductController(a.log, a.cfg, productUsecase, a.echo.Group(a.cfg.Http.ProductsPath), a.validate)
 	productController.MapRoutes()
