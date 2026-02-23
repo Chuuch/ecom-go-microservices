@@ -20,7 +20,6 @@ type publisher struct {
 	log      logger.Logger
 }
 
-
 func NewPublisher(cfg *config.Config, log logger.Logger) (*publisher, error) {
 	conn, err := NewRabbitMQConnection(cfg)
 	if err != nil {
@@ -35,17 +34,20 @@ func NewPublisher(cfg *config.Config, log logger.Logger) (*publisher, error) {
 	return &publisher{
 		amqpConn: conn,
 		amqpChan: channel,
-		log: log,
+		log:      log,
 	}, nil
 }
 
-func (p *publisher) Close() {
+func (p *publisher) Close() error {
 	if err := p.amqpChan.Close(); err != nil {
 		p.log.Errorf("failed to close amqp channel: %v", err)
+		return err
 	}
 	if err := p.amqpConn.Close(); err != nil {
 		p.log.Errorf("failed to close amqp connection: %v", err)
+		return err
 	}
+	return nil
 }
 
 func (p *publisher) PublishWithContext(
@@ -62,10 +64,10 @@ func (p *publisher) PublishWithContext(
 		mandatory,
 		immediate,
 		msg); err != nil {
-			p.log.Error("failed to publish message: %v", err)
-			return err
-		}
-		return nil
+		p.log.Error("failed to publish message: %v", err)
+		return err
+	}
+	return nil
 }
 
 func (p *publisher) Publish(ctx context.Context, exchange, key string, msg amqp091.Publishing) error {
