@@ -20,11 +20,13 @@ import (
 	"github.com/chuuch/search-microservice/pkg/logger"
 	"github.com/chuuch/search-microservice/pkg/middlewares"
 	misstypemanager "github.com/chuuch/search-microservice/pkg/misstype_manager"
+	"github.com/chuuch/search-microservice/pkg/rabbitmq"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v5"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type App struct {
@@ -36,6 +38,8 @@ type App struct {
 	echo              *echo.Echo
 	middlewareManager middlewares.MiddlewareManager
 	misstypeManager   misstypemanager.MisstypeManager
+	amqpConn          *amqp.Connection
+	amqpChan          *amqp.Channel
 }
 
 func (a *App) loadKeysMappings() (*misstypemanager.KeyboardMisstypeManager, error) {
@@ -172,6 +176,19 @@ func (a *App) Run() error {
 	}
 
 	a.middlewareManager = middlewares.NewMiddlewareManager(a.log, a.cfg, nil)
+
+	// Initialize RabbitMQ
+	amqpConn, err := rabbitmq.NewRabbitMQ(a.cfg)
+	if err != nil {
+		return err
+	}
+	defer amqpConn.Close()
+	a.amqpConn = amqpConn
+
+	amqpChan, err := amqpConn.Channel()
+	a.amqpChan = amqpChan
+	
+	a.log.Info("RabbitMQ cient initialized")
 
 	// Initialize Elasticsearch
 	elasticSearchClient, err := elastic.NewElasticSearch(a.cfg)
