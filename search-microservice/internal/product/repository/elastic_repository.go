@@ -25,11 +25,12 @@ type ElasticRepository struct {
 	misstypeManager misstypemanager.MisstypeManager
 }
 
-func NewElasticRepository(log logger.Logger, cfg *config.Config, esClient *elasticsearch.Client) *ElasticRepository {
+func NewElasticRepository(log logger.Logger, cfg *config.Config, esClient *elasticsearch.Client, misstypeManager misstypemanager.MisstypeManager) *ElasticRepository {
 	return &ElasticRepository{
-		log:      log,
-		cfg:      cfg,
-		esClient: esClient,
+		log:             log,
+		cfg:             cfg,
+		esClient:        esClient,
+		misstypeManager: misstypeManager,
 	}
 }
 
@@ -120,21 +121,21 @@ func (e *ElasticRepository) Search(
 		return nil, errors.Wrap(errors.New(response.String()), "failed to search")
 	}
 
-	e.log.Info("search response: %s", response.String())
-
 	hits := esclient.ESHits[*domain.Product]{}
 	err = json.NewDecoder(response.Body).Decode(&hits)
 	if err != nil {
 		return nil, err
 	}
-	responseList := make([]*domain.Product, 0, len(hits.Hits.Hits))
+	e.log.Info("search response: %s", response.String())
+
+	responseList := make([]*domain.Product, len(hits.Hits.Hits))
 	for i, source := range hits.Hits.Hits {
 		responseList[i] = source.Source
 	}
 
 	e.log.Info("search response list: %v", responseList)
 	return &domain.ProductSearchResponse{
-		List: responseList,
+		List:               responseList,
 		PaginationResponse: utils.NewPaginationResponse(hits.Hits.Total.Value, pagination),
 	}, nil
 }
