@@ -22,6 +22,7 @@ require (
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.2.0 // indirect
+	github.com/brianvoe/gofakeit/v7 v7.14.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
