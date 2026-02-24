@@ -1,0 +1,62 @@
+Server:
+  AppVersion: 1.0.0
+  Port: :5001
+  Development: true
+
+Logger:
+  Level: info
+  Development: true
+  DisableCaller: false
+  Encoding: json
+
+Jaeger:
+  ServiceName: "search_microservice"
+  Host: "http://localhost:14268/api/traces"
+  LogSpans: true
+  Enable: true
+
+Elastic:
+  Addresses: ["http://localhost:9200"]
+  Username: ""
+  Password: ""
+  APIKey: ""
+  Header: {}
+  EnableLogging: true
+
+ElasticMapping:
+  path: "config/mappings.json"
+  name: "products"
+  alias: "products-alias"
+  ProductsIndex:
+    path: "config/mappings.json"
+    name: "products"
+    alias: "products-alias"
+Http:
+  Port: "8000"
+  DebugErrorResponse: true
+  Development: true
+  IgnoredURIs: ["/health", "/health/ready", "/health/live"]
+  ProductsPath: "/v1/products"
+
+RabbitMQ:
+  URI: "amqp://guest:guest@localhost:5672"
+  ExchangeName: "search-microservice-exchange"
+  ExchangeKind: "direct"
+  QueueName: "search-microservice-queue"
+  BindingKey: "search-binding-key"
+  Concurrency: 10
+  Consumer: "products-consumer"
+  BulkIndexer:
+    NumWorkers: 10
+    FlushBytes: 20000000 # 20MB
+    FlushIntervalSeconds: 15
+    TimeoutMilliseconds: 5000 # 5 seconds
+Probes:
+  ReadinessPath: "/health/ready"
+  LivenessPath: "/health/live"
+  Port: "8001"
+  Pprof: "/debug/pprof"
+  PrometheusPath: "/metrics"
+  PrometheusPort: "9090"
+  CheckIntervalSeconds: 5
+

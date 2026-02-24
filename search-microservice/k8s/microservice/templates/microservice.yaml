@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.searchMicroserviceName }}
+  labels:
+    app: {{ .Values.searchMicroserviceName }}
+spec:
+  replicas: {{ .Values.searchMicroserviceReplicas }}
+  template:
+    metadata:
+      name: {{ .Values.searchMicroserviceName }}
+      labels:
+        app: {{ .Values.searchMicroserviceName }}
+    spec:
+      containers:
+        - name: {{ .Values.searchMicroserviceName }}
+          image: {{ .Values.searchMicroserviceImage }}
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "300m"
+            limits:
+              memory: "1000Mi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.searchMicroserviceLivenessProbePath }}
+              port: {{ .Values.searchMicroserviceLivenessProbePort }}
+            initialDelaySeconds: {{ .Values.searchMicroserviceInitialDelaySeconds }}
+            periodSeconds: {{ .Values.searchMicroserviceLivenessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.searchMicroserviceLivenessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.searchMicroserviceLivenessProbeFailureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.searchMicroserviceReadinessProbePath }}
+              port: {{ .Values.searchMicroserviceReadinessProbePort }}
+            initialDelaySeconds: {{ .Values.searchMicroserviceReadinessProbeInitialDelaySeconds }}
+            periodSeconds: {{ .Values.searchMicroserviceReadinessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.searchMicroserviceReadinessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.searchMicroserviceReadinessProbeFailureThreshold }}
+          ports:
+            - containerPort: {{ .Values.searchMicroserviceHttpPort }}
+              name: http
+            - containerPort: {{ .Values.searchMicroserviceMetricsPort }}
+              name: metrics
+          env:
+            - name: JAEGER_HOST_PORT
+              value: {{ .Values.jaegerHostPort }}
+            - name: ELASTIC_URL
+              value: {{ .Values.elasticSearchURL }}
+            - name: RABBITMQ_URI
+              value: {{ .Values.rabbitMqURI }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.searchMicroserviceTerminationGracePeriodSeconds }}
+  selector:
+    matchLabels:
+      app: {{ .Values.searchMicroserviceName }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microservice-service
+spec:
+  selector:
+    app: {{ .Values.searchMicroserviceName }}
+  ports:
+    - port: {{ .Values.searchMicroserviceHttpPort }}
+      name: http
+      protocol: TCP
+      targetPort: {{ .Values.searchMicroserviceHttpPort }}
+    - port: {{ .Values.searchMicroserviceMetricsPort }}
+      name: metrics
+      protocol: TCP
+      targetPort: {{ .Values.searchMicroserviceMetricsPort }}
+  type: LoadBalancer

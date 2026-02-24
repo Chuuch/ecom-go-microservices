@@ -1,0 +1,105 @@
+services:
+  microservice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: search_microservice
+    restart: always
+    ports:
+      - "8000:8000"
+      - "3001:3001"
+    environment:
+      - JAEGER_HOST_PORT=host.docker.internal:6831
+      - ELASTIC_URL=http://host.docker.internal:9200
+      - RABBITMQ_URI=amqp://guest:guest@host.docker.internal:5672
+    depends_on:
+      - rabbitmq
+      - node01
+      - kibana
+      - jaeger
+      - node_exporter
+      - grafana
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+  
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    restart: always
+    ports:
+      - "9100:9100"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+
+  rabbitmq:
+    image: rabbitmq:4.2.4-alpine
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+  node01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+    container_name: node01
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+      - node.name=node01
+      - cluster.name=elasticsearch
+      - xpack.license.self_generated.type=basic
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./es-data01:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.3.0
+    container_name: kibana
+    restart: always
+    environment:
+      ELASTICSEARCH_HOSTS: http://node01:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - node01
+  jaeger:
+    container_name: jaeger_container
+    image: jaegertracing/all-in-one:1.76.0
+    restart: always
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411  
+
+volumes:
+  es-data01:
+    driver: local
+    
