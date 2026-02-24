@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/chuuch/search-microservice/config"
-	"github.com/chuuch/search-microservice/internal/product/domain"
+	"github.com/chuuch/search-microservice/internal/metrics"
 	"github.com/chuuch/search-microservice/internal/product/repository"
 	rabbitmqConsumer "github.com/chuuch/search-microservice/internal/product/transport/http/rabbitmq"
 	v1 "github.com/chuuch/search-microservice/internal/product/transport/http/v1"
@@ -24,7 +25,6 @@ import (
 	"github.com/chuuch/search-microservice/pkg/rabbitmq"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/go-playground/validator"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -38,11 +38,16 @@ type App struct {
 	elasticClient     *elasticsearch.Client
 	validate          *validator.Validate
 	echo              *echo.Echo
+	httpServer        *http.Server
 	middlewareManager middlewares.MiddlewareManager
 	misstypeManager   misstypemanager.MisstypeManager
 	amqpConn          *amqp.Connection
 	amqpChan          *amqp.Channel
 	amqpPublisher     rabbitmq.AmqpPublisher
+	metrics           *metrics.SearchMicroserviceMetrics
+	metricsServer     *echo.Echo
+	metricsHttpServer *http.Server
+	healthcheckServer *http.Server
 }
 
 func (a *App) loadKeysMappings() (*misstypemanager.KeyboardMisstypeManager, error) {
@@ -178,7 +183,9 @@ func (a *App) Run() error {
 		a.log.Info("Jaeger initialized")
 	}
 
-	a.middlewareManager = middlewares.NewMiddlewareManager(a.log, a.cfg, nil)
+	a.middlewareManager = middlewares.NewMiddlewareManager(a.log, a.cfg, a.getHttpMetricsCb())
+
+	a.metrics = metrics.NewSearchMicroserviceMetrics(a.cfg)
 
 	// Initialize RabbitMQ
 	if err := a.initRabbitMQ(ctx); err != nil {
@@ -247,47 +254,35 @@ func (a *App) Run() error {
 		}
 	}()
 
-	a.amqpPublisher, err = rabbitmq.NewPublisher(a.cfg, a.log)
-	if err != nil {
-		return err
-	}
-	defer a.amqpPublisher.Close()
-
-	go func() {
-		time.Sleep(5 * time.Second)
-
-		product := domain.Product{
-			ID:           uuid.New().String(),
-			Title:        "Iphone 17 Pro Max",
-			Description:  "Latest Iphone",
-			ImageURL:     "https://example.com/image.jpg",
-			CountInStock: 10,
-			Shop:         "Test Shop",
-			CreatedAt:    time.Now().UTC(),
-		}
-		dataBytes, err := json.Marshal(&product)
-		if err != nil {
-			return
-		}
-
-		if err := a.amqpPublisher.Publish(
-			ctx,
-			a.cfg.RabbitMQ.ExchangeName,
-			a.cfg.RabbitMQ.BindingKey,
-			amqp.Publishing{
-				Headers:   map[string]interface{}{"Content-Type": "application/json"},
-				Timestamp: time.Now().UTC(),
-				Body:      dataBytes,
-			},
-		); err != nil {
-			a.log.Error("Failed to publish product: %v", err)
-			return
-		}
-		a.log.Infof("Product published successfully %s", product.ID)
-	}()
+	a.runMetrics(cancel)
+	a.runHealthCheck(ctx)
 
 	<-ctx.Done()
 	a.waitShutDown(3 * time.Second)
+
+	if a.httpServer != nil {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
+		if err := a.httpServer.Shutdown(shutdownCtx); err != nil {
+			a.log.Error("Failed to shutdow HTTP server: %v", err)
+			return err
+		}
+	}
+
+	if a.metricsHttpServer != nil {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		if err := a.metricsHttpServer.Shutdown(shutdownCtx); err != nil {
+			a.log.Error("Failed to shutdown metrics server: %v", err)
+			return err
+		}
+	}
+
+	if err := a.shutDownHealthCheckServer(ctx); err != nil {
+		a.log.Error("Failed to shutdown health check server: %v", err)
+		return err
+	}
 
 	<-a.doneCh
 	a.log.Info("App exited properly")
