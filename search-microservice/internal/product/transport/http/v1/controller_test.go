@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/chuuch/search-microservice/internal/product/domain"
 	"github.com/chuuch/search-microservice/pkg/http_client"
 	"github.com/google/uuid"
@@ -51,4 +52,37 @@ func TestIndexProduct(t *testing.T) {
 	require.NotEmpty(t, productResponse.ID)
 
 	t.Logf("product indexed successfully %s", productResponse.ID)
+}
+
+func TestIndexAsync(t *testing.T) {
+	t.Parallel()
+
+	client := http_client.NewHttpClient(true)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 70*time.Second)
+	defer cancel()
+
+	product := domain.Product{
+		ID:           uuid.New().String(),
+		Title:        gofakeit.Sentence(10),
+		ImageURL:     "https://example.com/image.jpg",
+		CountInStock: gofakeit.Number(1, 100),
+		Shop:         gofakeit.Company(),
+		CreatedAt:    time.Now().UTC(),
+	}
+
+	t.Logf("indexing product %s", product.ID)
+
+	response, err := client.R().
+		SetBody(product).
+		SetContext(ctx).
+		Post("http://localhost:8000/v1/products/async")
+
+	require.NoError(t, err)
+	require.NotNil(t, response)
+	require.False(t, response.IsError())
+	require.True(t, response.IsSuccess())
+	require.Equal(t, response.StatusCode(), http.StatusCreated)
+
+	t.Logf("product indexed asynchrounously successfully %s", product.ID)
 }
