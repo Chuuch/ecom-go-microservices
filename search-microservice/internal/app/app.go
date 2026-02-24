@@ -43,6 +43,7 @@ type App struct {
 	misstypeManager   misstypemanager.MisstypeManager
 	amqpConn          *amqp.Connection
 	amqpChan          *amqp.Channel
+	amqpConsumeChan   *amqp.Channel
 	amqpPublisher     rabbitmq.AmqpPublisher
 	metrics           *metrics.SearchMicroserviceMetrics
 	metricsServer     *echo.Echo
@@ -204,6 +205,18 @@ func (a *App) Run() error {
 	}
 	a.log.Info("RabbitMQ queue declared: %s", queue.Name)
 
+	consumeChan, err := a.amqpConn.Channel()
+	if err != nil {
+		a.log.Error("Failed to open consume channel: %v", err)
+		return err
+	}
+	if err := consumeChan.Qos(1, 0, true); err != nil {
+		a.log.Error("failed to set QoS on consume channel: %v", err)
+		_ = consumeChan.Close()
+		return err
+	}
+	a.amqpConsumeChan = consumeChan
+
 	if err := a.initRabbitMQPublisher(ctx); err != nil {
 		a.log.Error("Failed to initialize RabbitMQ publisher: %v", err)
 		return err
@@ -233,7 +246,7 @@ func (a *App) Run() error {
 
 	a.log.Info("HTTP server started on port %s", a.cfg.Http.Port)
 
-	productConsumer := rabbitmqConsumer.NewProductConsumer(a.log, a.cfg, a.amqpConn, a.amqpChan, productUsecase, a.elasticClient)
+	productConsumer := rabbitmqConsumer.NewProductConsumer(a.log, a.cfg, a.amqpConn, a.amqpConsumeChan, productUsecase, a.elasticClient)
 	if err := productConsumer.InitBulkIndexer(); err != nil {
 		a.log.Error("Failed to initialize bulk indexer: %v", err)
 		cancel()
@@ -243,7 +256,7 @@ func (a *App) Run() error {
 	go func() {
 		if err := rabbitmq.ConsumeQueue(
 			ctx,
-			a.amqpChan,
+			a.amqpConsumeChan,
 			a.cfg.RabbitMQ.Concurrency,
 			queue.Name,
 			a.cfg.RabbitMQ.Consumer,

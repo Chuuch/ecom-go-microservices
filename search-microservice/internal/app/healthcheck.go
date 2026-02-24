@@ -14,9 +14,13 @@ import (
 func (a *App) runHealthCheck(ctx context.Context) {
 	health := healthcheck.NewHandler()
 
+	a.configureHealthCheckEndpoints(ctx, health)
+
 	mux := http.NewServeMux()
-	mux.HandleFunc(a.cfg.Probes.ReadinessPath, health.ReadyEndpoint)
 	mux.HandleFunc(a.cfg.Probes.LivenessPath, health.LiveEndpoint)
+	if a.cfg.Probes.ReadinessPath != a.cfg.Probes.LivenessPath {
+		mux.HandleFunc(a.cfg.Probes.ReadinessPath, health.ReadyEndpoint)
+	}
 
 	a.healthcheckServer = &http.Server{
 		Handler:      mux,
@@ -24,8 +28,6 @@ func (a *App) runHealthCheck(ctx context.Context) {
 		ReadTimeout:  readTimeout,
 		Addr:         fmt.Sprintf(":%s", a.cfg.Probes.Port),
 	}
-
-	a.configureHealthCheckEndpoints(ctx, health)
 
 	go func() {
 		a.log.Info("health check server started on port %s", a.cfg.Probes.Port)

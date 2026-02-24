@@ -18,7 +18,7 @@ Jaeger:
 Elastic:
   Addresses: ["http://localhost:9200"]
   Username: ""
-  Pasword: ""
+  Password: ""
   APIKey: ""
   Header: {}
   EnableLogging: true
@@ -35,7 +35,7 @@ Http:
   Port: "8000"
   DebugErrorResponse: true
   Development: true
-  IgnoredURIs: ["/health"]
+  IgnoredURIs: ["/health", "/health/ready", "/health/live"]
   ProductsPath: "/v1/products"
 
 RabbitMQ:
@@ -44,16 +44,16 @@ RabbitMQ:
   ExchangeKind: "direct"
   QueueName: "search-microservice-queue"
   BindingKey: "search-binding-key"
-  Concurency: 10
-  Consumer: "produts-consumer"
+  Concurrency: 10
+  Consumer: "products-consumer"
   BulkIndexer:
     NumWorkers: 10
     FlushBytes: 20000000 # 20MB
     FlushIntervalSeconds: 15
     TimeoutMilliseconds: 5000 # 5 seconds
 Probes:
-  ReadinessPath: "/health"
-  LivenessPath: "/health"
+  ReadinessPath: "/health/ready"
+  LivenessPath: "/health/live"
   Port: "8001"
   Pprof: "/debug/pprof"
   PrometheusPath: "/metrics"

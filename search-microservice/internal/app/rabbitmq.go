@@ -68,6 +68,9 @@ func (a *App) initRabbitMQPublisher(ctx context.Context) error {
 }
 
 func (a *App) closeRabbitMQ() error {
+	if a.amqpConsumeChan != nil {
+		_ = a.amqpConsumeChan.Close()
+	}
 	if err := a.amqpChan.Close(); err != nil {
 		return err
 	}

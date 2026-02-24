@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/chuuch/search-microservice/pkg/esclient"
 	"github.com/chuuch/search-microservice/pkg/probes"
@@ -24,6 +26,10 @@ func LoadConfig(filename string) (*viper.Viper, error) {
 		}
 		return nil, err
 	}
+
+	// Bind env vars so K8s/Docker env override file values
+	_ = v.BindEnv("RabbitMQ.URI", "RABBITMQ_URI")
+	_ = v.BindEnv("Jaeger.Host", "JAEGER_HOST_PORT")
 	return v, nil
 }
 
@@ -36,6 +42,25 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 		return nil, err
 	}
 
+	// ELASTIC_URL is a single URL; override Elastic.Addresses when set
+	if url := os.Getenv("ELASTIC_URL"); url != "" {
+		c.Elastic.Addresses = []string{strings.TrimSpace(url)}
+	}
+	// JAEGER_HOST_PORT may be "host:port"; ensure full collector URL for jaeger-client-go
+	if host := os.Getenv("JAEGER_HOST_PORT"); host != "" {
+		host = strings.TrimSpace(host)
+		if !strings.HasPrefix(host, "http") {
+			host = "http://" + host
+		}
+		if !strings.Contains(host, "/api/traces") {
+			host = strings.TrimSuffix(host, "/") + "/api/traces"
+		}
+		c.Jaeger.Host = host
+	}
+	// RABBITMQ_URI is bound above; viper may not override nested on Unmarshal, so apply explicitly
+	if uri := os.Getenv("RABBITMQ_URI"); uri != "" {
+		c.RabbitMQ.URI = strings.TrimSpace(uri)
+	}
 	return &c, nil
 }
 

@@ -59,8 +59,8 @@ func (c *productConsumer) ConsumeIndexDeliveries(
 			case delivery, ok := <-deliveries:
 				if !ok {
 					c.log.Infof("deliveries channel closed, stopping to consume index deliveries")
+					return nil
 				}
-				c.log.Infof("deliveries channel closed, stopping to consume index deliveries")
 				if err := c.bulkIndexProduct(ctx, delivery); err != nil {
 					c.log.Errorf("failed to index product: %v", err)
 					return err
