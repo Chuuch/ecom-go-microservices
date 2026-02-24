@@ -78,3 +78,26 @@ func (h *productController) search() echo.HandlerFunc {
 		return c.JSON(http.StatusOK, searchResult)
 	}
 }
+
+func (h *productController) indexAsync() echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		span, ctx := opentracing.StartSpanFromContext(c.Request().Context(), "productController.indexAsync")
+		defer span.Finish()
+
+		var product domain.Product
+		if err := c.Bind(&product); err != nil {
+			h.log.Error("failed to bind product: %v", err)
+			return httpErrors.ErrorCtxResponse(c, err, h.cfg.Http.DebugErrorResponse)
+		}
+
+		product.ID = uuid.New().String()
+
+		if err := h.productUsecase.IndexAsync(ctx, product); err != nil {
+			h.log.Error("failed to indexproduct asynchronously: %v", err)
+			return httpErrors.ErrorCtxResponse(c, err, h.cfg.Http.DebugErrorResponse)
+		}
+
+		h.log.Info("product indexed asynchronously %s", product.ID)
+		return c.JSON(http.StatusCreated, product)
+	}
+}
