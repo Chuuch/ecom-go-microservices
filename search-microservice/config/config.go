@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/chuuch/search-microservice/pkg/esclient"
+	"github.com/chuuch/search-microservice/pkg/probes"
 	"github.com/spf13/viper"
 )
 
@@ -39,13 +40,14 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 }
 
 type Config struct {
-	Server   ServerConfig
-	Logger   LoggerConfig
-	Jaeger   JaegerConfig
-	Elastic  ElasticConfig
+	Server         ServerConfig
+	Logger         LoggerConfig
+	Jaeger         JaegerConfig
+	Elastic        ElasticConfig
 	ElasticMapping ElasticMappingConfig
-	Http     HTTPConfig
-	RabbitMQ RabbitMQConfig
+	Http           HTTPConfig
+	RabbitMQ       RabbitMQConfig
+	Probes         probes.Probes
 }
 
 type ServerConfig struct {
@@ -78,9 +80,9 @@ type ElasticConfig struct {
 }
 
 type ElasticMappingConfig struct {
-	Path string
-	Name string
-	Alias string
+	Path          string
+	Name          string
+	Alias         string
 	ProductsIndex esclient.ElasticIndex
 }
 
