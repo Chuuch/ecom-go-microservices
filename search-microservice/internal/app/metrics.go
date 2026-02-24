@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/chuuch/search-microservice/pkg/middlewares"
 	"github.com/labstack/echo/v5"
@@ -12,20 +13,26 @@ import (
 
 func (a *App) runMetrics(cancel context.CancelFunc) {
 	a.metricsServer = echo.New()
-	go func() {
-		a.metricsServer.Use(
-			middleware.RecoverWithConfig(
-				middleware.RecoverConfig{
-					StackSize:         stackSize,
-					DisableStackAll:   false,
-					DisablePrintStack: false,
-				},
-			),
-		)
-		a.metricsServer.GET(a.cfg.Probes.PrometheusPath, echo.WrapHandler(promhttp.Handler()))
+	a.metricsServer.Use(
+		middleware.RecoverWithConfig(
+			middleware.RecoverConfig{
+				StackSize:         stackSize,
+				DisableStackAll:   false,
+				DisablePrintStack: false,
+			},
+		),
+	)
+	a.metricsServer.GET(a.cfg.Probes.PrometheusPath, echo.WrapHandler(promhttp.Handler()))
 
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%s", a.cfg.Probes.PrometheusPort),
+		Handler: a.metricsServer,
+	}
+	a.metricsHttpServer = srv
+
+	go func() {
 		a.log.Info("metrics server started on port %s", a.cfg.Probes.PrometheusPort)
-		if err := a.metricsServer.Start(fmt.Sprintf(":%s", a.cfg.Probes.PrometheusPort)); err != nil {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			a.log.Error("failed to start metrics server: %v", err)
 			cancel()
 		}
