@@ -32,7 +32,7 @@ ElasticMapping:
     name: "products"
     alias: "products-alias"
 Http:
-  Port: "8080"
+  Port: "8000"
   DebugErrorResponse: true
   Development: true
   IgnoredURIs: ["/health"]
@@ -51,12 +51,12 @@ RabbitMQ:
     FlushBytes: 20000000 # 20MB
     FlushIntervalSeconds: 15
     TimeoutMilliseconds: 5000 # 5 seconds
-  Probes:
-    ReadinessPath: "/health"
-    LivenessPath: "/health"
-    Port: "3001"
-    Pprof: "/debug/pprof"
-    PrometheusPath: "/metrics"
-    PrometheusPort: "8001"
-    ChecIntervalSeconds: 5
+Probes:
+  ReadinessPath: "/health"
+  LivenessPath: "/health"
+  Port: "8001"
+  Pprof: "/debug/pprof"
+  PrometheusPath: "/metrics"
+  PrometheusPort: "9090"
+  CheckIntervalSeconds: 5
 
