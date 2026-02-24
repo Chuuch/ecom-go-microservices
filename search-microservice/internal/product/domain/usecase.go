@@ -9,5 +9,5 @@ import (
 type ProductUsecase interface {
 	Index(ctx context.Context, product Product) error
 	Search(ctx context.Context, term string, pagination *utils.Pagination) (*ProductSearchResponse, error)
-	// IndexAsync(ctx context.Context, product Product) error
+	IndexAsync(ctx context.Context, product Product) error
 }
