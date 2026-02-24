@@ -7,7 +7,7 @@ Logger:
   Level: info
   Development: true
   DisableCaller: false
-  Encoding: console
+  Encoding: json
 
 Jaeger:
   ServiceName: "search_microservice"
