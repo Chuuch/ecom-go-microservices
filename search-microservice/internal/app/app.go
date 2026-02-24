@@ -220,7 +220,7 @@ func (a *App) Run() error {
 	}
 
 	elasticRepository := repository.NewElasticRepository(a.log, a.cfg, a.elasticClient, a.misstypeManager)
-	productUsecase := usecase.NewProductUsecase(a.log, a.cfg, elasticRepository)
+	productUsecase := usecase.NewProductUsecase(a.log, a.cfg, elasticRepository, a.amqpPublisher)
 	productController := v1.NewProductController(a.log, a.cfg, productUsecase, a.echo.Group(a.cfg.Http.ProductsPath), a.validate)
 	productController.MapRoutes()
 
